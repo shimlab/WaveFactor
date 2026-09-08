@@ -16,12 +16,6 @@ WaveFactor needs two inputs: an expression matrix `X` and spot coordinates `coor
 ### B. Expression Matrix (`X`)
 - A 2D array of shape `(N_spots, N_genes)`.
 
-### C. Preprocessing Notes
-- **Continuous Values**: WaveFactor assumes continuous, bell-curve-like (Gaussian) values.
-- **Raw Counts (Visium, Slide-seq, etc.)**: If you start from raw sequencing counts on irregular spots:
-  1. **Aggregate/Bin**: Bin spots onto a regular square grid ($L \times L$).
-  2. **Normalize**: Apply standard library size normalization and a variance-stabilizing transformation (such as $\log(1 + \text{count})$ or Pearson residuals).
-
 ---
 
 ## 2. Key Parameters
