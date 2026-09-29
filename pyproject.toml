@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "wavefactor"
-version = "2.0.0"
+dynamic = ["version"]
 description = "Bayesian Multiresolution Wavelet Spatial Factor Model for Spatial Transcriptomics"
 readme = "README.md"
 requires-python = ">=3.7"
@@ -41,3 +41,6 @@ testing = [
 [tool.setuptools.packages.find]
 where = ["."]
 include = ["wavefactor*"]
+
+[tool.setuptools.dynamic]
+version = {file = "VERSION"}

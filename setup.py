@@ -73,9 +73,13 @@ class CMakeBuild(build_ext):
                     return
 
 
+with open(os.path.join(os.path.dirname(__file__), "VERSION"), "r", encoding="utf-8") as f:
+    version = f.read().strip()
+
+
 setup(
     name="wavefactor",
-    version="2.0.0",
+    version=version,
     packages=["wavefactor"],
     ext_modules=[CMakeExtension("WaveFactor")],
     cmdclass={"build_ext": CMakeBuild},
