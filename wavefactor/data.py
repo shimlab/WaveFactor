@@ -243,7 +243,6 @@ def _build_dimensions_dict(n_spots: int, n_length_scales: int, n_factors: int, n
         "n_spots": n_spots,
         "L_shape": get_L_shape(n_spots, n_resolutions, n_factors),
         "Y_shape": get_Y_shape(n_spots, n_resolutions, n_features),
-        "pi_L_shape": (n_resolutions,),
         "ab_t_shape": (n_resolutions, n_factors),
         "ab_tau_shape": (n_resolutions, n_features),
         "F_shape": (n_factors, n_features),

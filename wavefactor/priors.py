@@ -74,7 +74,7 @@ class Priors:
         ----------
         dimensions : dict
             Dictionary containing 'n_resolutions', 'n_factors', 'n_features',
-            'pi_L_shape', 'F_shape', 'ab_t_shape', 'ab_tau_shape'.
+            'F_shape', 'ab_t_shape', 'ab_tau_shape'.
 
         Returns
         -------

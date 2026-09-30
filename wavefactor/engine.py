@@ -73,7 +73,6 @@ def init_parameters(
     n_resolutions = dimensions["n_resolutions"]
     n_factors = dimensions["n_factors"]
     n_features = dimensions["n_features"]
-    pi_L_shape = dimensions.get("pi_L_shape", (n_resolutions,))
     F_shape = dimensions["F_shape"]
     ab_t_shape = dimensions["ab_t_shape"]
     ab_tau_shape = dimensions["ab_tau_shape"]
@@ -108,7 +107,7 @@ def init_parameters(
     beta_hat_tau = (rng.rand(*ab_tau_shape) * 9.99 + 0.01).astype(np.float64)
 
     # Set prior hyperparameters
-    default_log_pi_L = np.log(np.full(pi_L_shape, 0.5, dtype=np.float64))
+    default_log_pi_L = np.log(np.full(n_resolutions, 0.5, dtype=np.float64))
     default_log_pi_F = np.log(np.full(F_shape, 0.5, dtype=np.float64))
     default_alpha_t = np.full(ab_t_shape, 1.0, dtype=np.float64)
     default_beta_t = np.full(ab_t_shape, 1.0, dtype=np.float64)

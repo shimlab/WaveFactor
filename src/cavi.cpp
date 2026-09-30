@@ -5,7 +5,6 @@ CaviDimensions::CaviDimensions(int factors, int resolutions, int features, int s
       n_resolutions(resolutions),
       n_features(features),
       n_spots(spots),
-      pi_L_shape(resolutions),
       ab_t_shape({resolutions, factors}),
       ab_tau_shape({resolutions, features}),
       F_shape({factors, features}),
