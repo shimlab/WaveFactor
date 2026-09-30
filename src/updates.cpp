@@ -55,7 +55,7 @@ double compute_update_log_r_L(int i, int j, int k, int l, double update_sigma_sq
     return incremented_true_log_prob - sum_log(incremented_true_log_prob, incremented_false_log_prob);
 }
 
-UpdateLResult compute_update_L(int i, int j, int k, int l, const Parameters &parameters)
+UpdateLZLResult compute_update_L_Z_L(int i, int j, int k, int l, const Parameters &parameters)
 {
     double update_sigma_squared_L_ijk_l = compute_update_sigma_squared_L(i, j, k, l, parameters);
     double update_mu_L_ijk_l = compute_update_mu_L(i, j, k, l, update_sigma_squared_L_ijk_l, parameters);
@@ -111,7 +111,7 @@ double compute_update_log_r_F(int i, int j, double update_sigma_squared_F_i_j, d
     return incremented_true_log_prob - sum_log(incremented_true_log_prob, incremented_false_log_prob);
 }
 
-UpdateFResult compute_update_F(int i, int j, const Parameters &parameters)
+UpdateFZFResult compute_update_F_Z_F(int i, int j, const Parameters &parameters)
 {
     double update_sigma_squared_F_i_j = compute_update_sigma_squared_F(i, j, parameters);
     double update_mu_F_i_j = compute_update_mu_F(i, j, update_sigma_squared_F_i_j, parameters);

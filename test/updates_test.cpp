@@ -24,12 +24,12 @@ TEST(CaviUpdatesTest, ComputeUpdateLogRL)
     EXPECT_NEAR(compute_update_log_r_L(1, 1, 1, 1, mocks::update_sigma_squared_L_ijk_l, mocks::update_mu_L_ijk_l, mocks::parameters), mocks::update_log_r_L_ijk_l, 0.001);
 }
 
-TEST(CaviUpdatesTest, ComputeUpdateL)
+TEST(CaviUpdatesTest, ComputeUpdateLZL)
 {
-    auto update_L = compute_update_L(1, 1, 1, 1, mocks::parameters);
-    EXPECT_NEAR(update_L.sigma_squared_L, mocks::update_sigma_squared_L_ijk_l, 0.001);
-    EXPECT_NEAR(update_L.mu_L, mocks::update_mu_L_ijk_l, 0.001);
-    EXPECT_NEAR(update_L.log_r_L, mocks::update_log_r_L_ijk_l, 0.001);
+    auto update_L_Z_L = compute_update_L_Z_L(1, 1, 1, 1, mocks::parameters);
+    EXPECT_NEAR(update_L_Z_L.sigma_squared_L, mocks::update_sigma_squared_L_ijk_l, 0.001);
+    EXPECT_NEAR(update_L_Z_L.mu_L, mocks::update_mu_L_ijk_l, 0.001);
+    EXPECT_NEAR(update_L_Z_L.log_r_L, mocks::update_log_r_L_ijk_l, 0.001);
 }
 
 TEST(CaviUpdatesTest, ComputeUpdateSigmaSquaredF)
@@ -53,12 +53,12 @@ TEST(CaviUpdatesTest, ComputeUpdateLogRF)
     EXPECT_NEAR(compute_update_log_r_F(1, 1, mocks::update_sigma_squared_F_i_j, mocks::update_mu_F_i_j, mocks::parameters), mocks::update_log_r_F_i_j, 0.001);
 }
 
-TEST(CaviUpdatesTest, ComputeUpdateF)
+TEST(CaviUpdatesTest, ComputeUpdateFZF)
 {
-    auto update_F = compute_update_F(1, 1, mocks::parameters);
-    EXPECT_NEAR(update_F.sigma_squared_F, mocks::update_sigma_squared_F_i_j, 0.001);
-    EXPECT_NEAR(update_F.mu_F, mocks::update_mu_F_i_j, 0.001);
-    EXPECT_NEAR(update_F.log_r_F, mocks::update_log_r_F_i_j, 0.001);
+    auto update_F_Z_F = compute_update_F_Z_F(1, 1, mocks::parameters);
+    EXPECT_NEAR(update_F_Z_F.sigma_squared_F, mocks::update_sigma_squared_F_i_j, 0.001);
+    EXPECT_NEAR(update_F_Z_F.mu_F, mocks::update_mu_F_i_j, 0.001);
+    EXPECT_NEAR(update_F_Z_F.log_r_F, mocks::update_log_r_F_i_j, 0.001);
 }
 
 TEST(CaviUpdatesTest, ComputeUpdateAlphaHatTau)

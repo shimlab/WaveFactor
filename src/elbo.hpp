@@ -61,7 +61,7 @@ inline double compute_E_log_likelihood_tau_i_l(int i, int l, const Parameters &p
            alpha_tau_i_l * std::log(beta_tau_i_l) - std::lgamma(alpha_tau_i_l);
 }
 
-inline double compute_E_negative_variational_log_likelihood_L_ijk_l(int i, int j, int k, int l, const Parameters &parameters)
+inline double compute_E_negative_variational_log_likelihood_L_ijk_l_Z_L_ijk_l(int i, int j, int k, int l, const Parameters &parameters)
 {
     double r_L_ijk_l = std::exp(parameters.log_r_L[l][i][j][k]);
     double sigma_squared_L_ijk_l = parameters.sigma_squared_L[l][i][j][k];
@@ -69,7 +69,7 @@ inline double compute_E_negative_variational_log_likelihood_L_ijk_l(int i, int j
            (1 - r_L_ijk_l) * std::log(1 - r_L_ijk_l);
 }
 
-inline double compute_E_negative_variational_log_likelihood_F_i_j(int i, int j, const Parameters &parameters)
+inline double compute_E_negative_variational_log_likelihood_F_i_j_Z_F_i_j(int i, int j, const Parameters &parameters)
 {
     double r_F_i_j = std::exp(parameters.log_r_F[i][j]);
     double sigma_squared_F_i_j = parameters.sigma_squared_F[i][j];

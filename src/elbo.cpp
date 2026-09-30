@@ -52,7 +52,7 @@ double compute_elbo(const Parameters &parameters)
         {
             elbo += compute_E_log_likelihood_F_i_j_given_Z_F(i, j, parameters);
             elbo += compute_E_log_likelihood_Z_F_i_j(i, j, parameters);
-            elbo += compute_E_negative_variational_log_likelihood_F_i_j(i, j, parameters);
+            elbo += compute_E_negative_variational_log_likelihood_F_i_j_Z_F_i_j(i, j, parameters);
         }
     }
 
@@ -87,7 +87,7 @@ double compute_elbo(const Parameters &parameters)
                 {
                     elbo += compute_E_log_likelihood_L_ijk_l_given_Z_L_t(i, j, k, l, parameters);
                     elbo += compute_E_log_likelihood_Z_L_ijk_l(i, j, k, l, parameters);
-                    elbo += compute_E_negative_variational_log_likelihood_L_ijk_l(i, j, k, l, parameters);
+                    elbo += compute_E_negative_variational_log_likelihood_L_ijk_l_Z_L_ijk_l(i, j, k, l, parameters);
                 }
             }
         }

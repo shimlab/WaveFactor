@@ -194,9 +194,9 @@ namespace mocks
     const double E_log_likelihood_Z_F_i_j = 0.5 * std::log(0.5) + (1 - 0.5) * std::log(1 - 0.5);
     const double E_log_likelihood_t_i_l = -gamma_t_i_l - std::lgamma(1);
     const double E_log_likelihood_tau_i_l = -gamma_tau_i_l - std::lgamma(1);
-    const double E_negative_variational_log_likelihood_L_ijk_l = ((0.5 / 2) * (std::log(2 * M_PI * 1) + 1) - 0.5 * std::log(0.5) - (1 - 0.5) * std::log(1 - 0.5));
-    const double E_negative_variational_log_likelihood_F_i_j = ((0.5 / 2) * (std::log(2 * M_PI * 1) + 1) - 0.5 * std::log(0.5) - (1 - 0.5) * std::log(1 - 0.5));
+    const double E_negative_variational_log_likelihood_L_ijk_l_Z_L_ijk_l = ((0.5 / 2) * (std::log(2 * M_PI * 1) + 1) - 0.5 * std::log(0.5) - (1 - 0.5) * std::log(1 - 0.5));
+    const double E_negative_variational_log_likelihood_F_i_j_Z_F_i_j = ((0.5 / 2) * (std::log(2 * M_PI * 1) + 1) - 0.5 * std::log(0.5) - (1 - 0.5) * std::log(1 - 0.5));
     const double E_negative_variational_log_likelihood_t_i_l = 1 + std::lgamma(1);
     const double E_negative_variational_log_likelihood_tau_i_l = 1 + std::lgamma(1);
-    const double elbo = (16 * 3 * E_log_likelihood_Y_ijk_l_given_pi_L_F_tau + 16 * 2 * E_log_likelihood_L_ijk_l_given_Z_L_t + 2 * 3 * E_log_likelihood_F_i_j_given_Z_F + 16 * 2 * E_log_likelihood_Z_L_ijk_l + 2 * 3 * E_log_likelihood_Z_F_i_j + 2 * 2 * E_log_likelihood_t_i_l + 2 * 3 * E_log_likelihood_tau_i_l + 16 * 2 * E_negative_variational_log_likelihood_L_ijk_l + 2 * 3 * E_negative_variational_log_likelihood_F_i_j + 2 * 2 * E_negative_variational_log_likelihood_t_i_l + 2 * 3 * E_negative_variational_log_likelihood_tau_i_l);
+    const double elbo = (16 * 3 * E_log_likelihood_Y_ijk_l_given_pi_L_F_tau + 16 * 2 * E_log_likelihood_L_ijk_l_given_Z_L_t + 2 * 3 * E_log_likelihood_F_i_j_given_Z_F + 16 * 2 * E_log_likelihood_Z_L_ijk_l + 2 * 3 * E_log_likelihood_Z_F_i_j + 2 * 2 * E_log_likelihood_t_i_l + 2 * 3 * E_log_likelihood_tau_i_l + 16 * 2 * E_negative_variational_log_likelihood_L_ijk_l_Z_L_ijk_l + 2 * 3 * E_negative_variational_log_likelihood_F_i_j_Z_F_i_j + 2 * 2 * E_negative_variational_log_likelihood_t_i_l + 2 * 3 * E_negative_variational_log_likelihood_tau_i_l);
 }

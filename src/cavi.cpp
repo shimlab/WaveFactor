@@ -123,7 +123,7 @@ CaviResult cavi(Parameters &parameters, int max_iterations, double relative_elbo
         // Run one iteration of CAVI updates
         Parameters new_parameters = parameters; // Copy construction
 
-        // For L_ijk_l, pi_L_i related updates
+        // For L_ijk_l, Z_L_ijk_l related updates
         for (int l = 0; l < n_factors; ++l)
         {
             for (int i = 0; i < n_resolutions; ++i)
@@ -132,7 +132,7 @@ CaviResult cavi(Parameters &parameters, int max_iterations, double relative_elbo
                 {
                     for (std::size_t k = 0; k < Y[l][i][j].size(); ++k)
                     {
-                        UpdateLResult L_update = compute_update_L(i, j, k, l, new_parameters);
+                        UpdateLZLResult L_update = compute_update_L_Z_L(i, j, k, l, new_parameters);
                         new_parameters.sigma_squared_L[l][i][j][k] = L_update.sigma_squared_L;
                         new_parameters.mu_L[l][i][j][k] = L_update.mu_L;
                         new_parameters.log_r_L[l][i][j][k] = L_update.log_r_L;
@@ -141,12 +141,12 @@ CaviResult cavi(Parameters &parameters, int max_iterations, double relative_elbo
             }
         }
 
-        // For F_i_j, pi_F_i_j related updates
+        // For F_i_j, Z_F_i_j related updates
         for (int i = 0; i < n_factors; ++i)
         {
             for (int j = 0; j < n_features; ++j)
             {
-                UpdateFResult F_update = compute_update_F(i, j, new_parameters);
+                UpdateFZFResult F_update = compute_update_F_Z_F(i, j, new_parameters);
                 new_parameters.sigma_squared_F[i][j] = F_update.sigma_squared_F;
                 new_parameters.mu_F[i][j] = F_update.mu_F;
                 new_parameters.log_r_F[i][j] = F_update.log_r_F;

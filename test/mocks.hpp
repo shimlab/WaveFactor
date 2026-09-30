@@ -91,8 +91,8 @@ namespace mocks
     extern const double E_log_likelihood_Z_F_i_j;
     extern const double E_log_likelihood_t_i_l;
     extern const double E_log_likelihood_tau_i_l;
-    extern const double E_negative_variational_log_likelihood_L_ijk_l;
-    extern const double E_negative_variational_log_likelihood_F_i_j;
+    extern const double E_negative_variational_log_likelihood_L_ijk_l_Z_L_ijk_l;
+    extern const double E_negative_variational_log_likelihood_F_i_j_Z_F_i_j;
     extern const double E_negative_variational_log_likelihood_t_i_l;
     extern const double E_negative_variational_log_likelihood_tau_i_l;
     extern const double elbo;
