@@ -11,7 +11,6 @@ TEST(CaviTest, CaviDimensionsTest)
     EXPECT_EQ(dim.n_resolutions, 3);
     EXPECT_EQ(dim.n_features, 3);
     EXPECT_EQ(dim.n_spots, 64);
-    EXPECT_EQ(dim.p_pi_shape, 3);
     EXPECT_EQ(dim.ab_t_shape[0], 3);
     EXPECT_EQ(dim.ab_t_shape[1], 2);
     EXPECT_EQ(dim.ab_tau_shape[0], 3);

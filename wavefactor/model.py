@@ -46,16 +46,20 @@ class WaveFactor(BaseEstimator):
     n_length_scales : int, default=4
         Number of wavelet detail length scales / decomposition levels (D).
         Total resolutions R = D + 1.
-    spatial_prior : str, float, list, or np.ndarray, default="decay"
-        Prior inclusion probabilities for spatial wavelet coefficients (pi).
-        Can be a preset ("decay", "sparse", "uniform"), scalar probability in (0, 1),
-        or explicit array of length R.
-    gene_prior : float, list, or np.ndarray, default=0.2
-        Prior inclusion probability for gene loadings (eta).
-    precision_prior_t : Tuple[float, float], default=(1.0, 1.0)
-        Shape (alpha) and rate (beta) for factor precision Gamma prior.
-    precision_prior_tau : Tuple[float, float], default=(1.0, 1.0)
-        Shape (alpha) and rate (beta) for noise precision Gamma prior.
+    spatial_prior : Optional[np.ndarray], default=None
+        Prior inclusion probabilities for spatial wavelet coefficients (pi_L).
+        Must be a 1D array of shape (n_resolutions,) with values in (0, 1).
+    gene_prior : Optional[np.ndarray], default=None
+        Prior inclusion probabilities for gene loadings (pi_F).
+        Must be a 2D array of shape (n_factors, n_features) with values in (0, 1).
+    alpha_t : Optional[np.ndarray], default=None
+        Shape hyperparameter matrix for factor precision Gamma prior, shape (R, K).
+    beta_t : Optional[np.ndarray], default=None
+        Rate hyperparameter matrix for factor precision Gamma prior, shape (R, K).
+    alpha_tau : Optional[np.ndarray], default=None
+        Shape hyperparameter matrix for noise precision Gamma prior, shape (R, G).
+    beta_tau : Optional[np.ndarray], default=None
+        Rate hyperparameter matrix for noise precision Gamma prior, shape (R, G).
     grid_side_length : int, optional
         Side length L of the square L x L spatial grid (must be a power of 2,
         e.g. 16, 32, 64, 128). Total grid cells = L * L. If None, automatically
@@ -247,12 +251,12 @@ class WaveFactor(BaseEstimator):
 
     @property
     def spatial_pip_(self) -> List:
-        """Posterior inclusion probabilities for spatial wavelet coefficients (r_pi)."""
+        """Posterior inclusion probabilities for spatial wavelet coefficients (r_L)."""
         return self.get_result().spatial_pip
 
     @property
     def gene_pip_(self) -> np.ndarray:
-        """Posterior inclusion probabilities for gene loadings (r_eta)."""
+        """Posterior inclusion probabilities for gene loadings (r_F)."""
         return self.get_result().gene_pip
 
     @property

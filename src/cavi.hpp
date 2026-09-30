@@ -29,7 +29,6 @@ public:
     const int n_resolutions;
     const int n_features;
     const int n_spots;
-    const int p_pi_shape;
     const std::array<int, 2> ab_t_shape;
     const std::array<int, 2> ab_tau_shape;
     const std::array<int, 2> F_shape;

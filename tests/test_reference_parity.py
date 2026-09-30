@@ -88,7 +88,7 @@ def test_reference_baseline_parity():
         "ELBO trajectory mismatch across iterations."
     )
 
-    # 3. Gene Loadings (mu_F * r_eta) parity
+    # 3. Gene Loadings (mu_F * r_F) parity
     assert np.allclose(res.loadings, ref["loadings"], rtol=1e-4, atol=1e-5), (
         "Gene loadings mismatch against reference."
     )

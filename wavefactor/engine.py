@@ -73,7 +73,6 @@ def init_parameters(
     n_resolutions = dimensions["n_resolutions"]
     n_factors = dimensions["n_factors"]
     n_features = dimensions["n_features"]
-    p_pi_shape = dimensions["p_pi_shape"]
     F_shape = dimensions["F_shape"]
     ab_t_shape = dimensions["ab_t_shape"]
     ab_tau_shape = dimensions["ab_tau_shape"]
@@ -96,35 +95,34 @@ def init_parameters(
 
     mu_L = _draw_L_shaped(-10.0, 10.0, log_transform=False)
     sigma_squared_L = _draw_L_shaped(0.01, 10.0, log_transform=False)
-    log_r_pi = _draw_L_shaped(0.01, 0.99, log_transform=True)
+    log_r_L = _draw_L_shaped(0.01, 0.99, log_transform=True)
 
     mu_F = (rng.rand(*F_shape) * 20.0 - 10.0).astype(np.float64)
     sigma_squared_F = (rng.rand(*F_shape) * 9.99 + 0.01).astype(np.float64)
-    r_eta = (rng.rand(*F_shape) * 0.98 + 0.01).astype(np.float64)
-    log_r_eta = np.log(r_eta)
+    log_r_F = np.log((rng.rand(*F_shape) * 0.98 + 0.01).astype(np.float64))
     alpha_hat_t = (rng.rand(*ab_t_shape) * 9.99 + 0.01).astype(np.float64)
     beta_hat_t = (rng.rand(*ab_t_shape) * 9.99 + 0.01).astype(np.float64)
     alpha_hat_tau = (rng.rand(*ab_tau_shape) * 9.99 + 0.01).astype(np.float64)
     beta_hat_tau = (rng.rand(*ab_tau_shape) * 9.99 + 0.01).astype(np.float64)
 
     # Set prior hyperparameters
-    default_log_p_pi = np.log(np.full(p_pi_shape, 0.5, dtype=np.float64))
-    default_log_p_eta = np.log(np.full(F_shape, 0.5, dtype=np.float64))
+    default_log_pi_L = np.log(np.full(n_resolutions, 0.5, dtype=np.float64))
+    default_log_pi_F = np.log(np.full(F_shape, 0.5, dtype=np.float64))
     default_alpha_t = np.full(ab_t_shape, 1.0, dtype=np.float64)
     default_beta_t = np.full(ab_t_shape, 1.0, dtype=np.float64)
     default_alpha_tau = np.full(ab_tau_shape, 1.0, dtype=np.float64)
     default_beta_tau = np.full(ab_tau_shape, 1.0, dtype=np.float64)
 
     if priors:
-        log_p_pi = priors.get("log_p_pi", default_log_p_pi)
-        log_p_eta = priors.get("log_p_eta", default_log_p_eta)
+        log_pi_L = priors.get("log_pi_L", default_log_pi_L)
+        log_pi_F = priors.get("log_pi_F", default_log_pi_F)
         alpha_t = priors.get("alpha_t", default_alpha_t)
         beta_t = priors.get("beta_t", default_beta_t)
         alpha_tau = priors.get("alpha_tau", default_alpha_tau)
         beta_tau = priors.get("beta_tau", default_beta_tau)
     else:
-        log_p_pi = default_log_p_pi
-        log_p_eta = default_log_p_eta
+        log_pi_L = default_log_pi_L
+        log_pi_F = default_log_pi_F
         alpha_t = default_alpha_t
         beta_t = default_beta_t
         alpha_tau = default_alpha_tau
@@ -135,18 +133,18 @@ def init_parameters(
         "n_factors": n_factors,
         "n_features": n_features,
         "Y": Y,
-        "log_p_pi": log_p_pi,
-        "log_p_eta": log_p_eta,
+        "log_pi_L": log_pi_L,
+        "log_pi_F": log_pi_F,
         "alpha_t": alpha_t,
         "beta_t": beta_t,
         "alpha_tau": alpha_tau,
         "beta_tau": beta_tau,
         "mu_L": mu_L,
         "sigma_squared_L": sigma_squared_L,
-        "log_r_pi": log_r_pi,
+        "log_r_L": log_r_L,
         "mu_F": mu_F,
         "sigma_squared_F": sigma_squared_F,
-        "log_r_eta": log_r_eta,
+        "log_r_F": log_r_F,
         "alpha_hat_t": alpha_hat_t,
         "beta_hat_t": beta_hat_t,
         "alpha_hat_tau": alpha_hat_tau,
@@ -161,18 +159,18 @@ def build_parameters_cpp(parameters: Dict[str, Any], cpp_backend: Any) -> Any:
         parameters["n_factors"],
         parameters["n_features"],
         parameters["Y"],
-        parameters["log_p_pi"].tolist() if isinstance(parameters["log_p_pi"], np.ndarray) else parameters["log_p_pi"],
-        parameters["log_p_eta"].tolist() if isinstance(parameters["log_p_eta"], np.ndarray) else parameters["log_p_eta"],
+        parameters["log_pi_L"].tolist() if isinstance(parameters["log_pi_L"], np.ndarray) else parameters["log_pi_L"],
+        parameters["log_pi_F"].tolist() if isinstance(parameters["log_pi_F"], np.ndarray) else parameters["log_pi_F"],
         parameters["alpha_t"].tolist() if isinstance(parameters["alpha_t"], np.ndarray) else parameters["alpha_t"],
         parameters["beta_t"].tolist() if isinstance(parameters["beta_t"], np.ndarray) else parameters["beta_t"],
         parameters["alpha_tau"].tolist() if isinstance(parameters["alpha_tau"], np.ndarray) else parameters["alpha_tau"],
         parameters["beta_tau"].tolist() if isinstance(parameters["beta_tau"], np.ndarray) else parameters["beta_tau"],
         parameters["mu_L"],
         parameters["sigma_squared_L"],
-        parameters["log_r_pi"],
+        parameters["log_r_L"],
         parameters["mu_F"].tolist() if isinstance(parameters["mu_F"], np.ndarray) else parameters["mu_F"],
         parameters["sigma_squared_F"].tolist() if isinstance(parameters["sigma_squared_F"], np.ndarray) else parameters["sigma_squared_F"],
-        parameters["log_r_eta"].tolist() if isinstance(parameters["log_r_eta"], np.ndarray) else parameters["log_r_eta"],
+        parameters["log_r_F"].tolist() if isinstance(parameters["log_r_F"], np.ndarray) else parameters["log_r_F"],
         parameters["alpha_hat_t"].tolist() if isinstance(parameters["alpha_hat_t"], np.ndarray) else parameters["alpha_hat_t"],
         parameters["beta_hat_t"].tolist() if isinstance(parameters["beta_hat_t"], np.ndarray) else parameters["beta_hat_t"],
         parameters["alpha_hat_tau"].tolist() if isinstance(parameters["alpha_hat_tau"], np.ndarray) else parameters["alpha_hat_tau"],
@@ -187,18 +185,18 @@ def extract_cpp_parameters_to_dict(cpp_params: Any) -> Dict[str, Any]:
         "n_factors": cpp_params.n_factors,
         "n_features": cpp_params.n_features,
         "Y": cpp_params.Y,
-        "log_p_pi": np.asarray(cpp_params.log_p_pi, dtype=np.float64),
-        "log_p_eta": np.asarray(cpp_params.log_p_eta, dtype=np.float64),
+        "log_pi_L": np.asarray(cpp_params.log_pi_L, dtype=np.float64),
+        "log_pi_F": np.asarray(cpp_params.log_pi_F, dtype=np.float64),
         "alpha_t": np.asarray(cpp_params.alpha_t, dtype=np.float64),
         "beta_t": np.asarray(cpp_params.beta_t, dtype=np.float64),
         "alpha_tau": np.asarray(cpp_params.alpha_tau, dtype=np.float64),
         "beta_tau": np.asarray(cpp_params.beta_tau, dtype=np.float64),
         "mu_L": cpp_params.mu_L,
         "sigma_squared_L": cpp_params.sigma_squared_L,
-        "log_r_pi": cpp_params.log_r_pi,
+        "log_r_L": cpp_params.log_r_L,
         "mu_F": np.asarray(cpp_params.mu_F, dtype=np.float64),
         "sigma_squared_F": np.asarray(cpp_params.sigma_squared_F, dtype=np.float64),
-        "log_r_eta": np.asarray(cpp_params.log_r_eta, dtype=np.float64),
+        "log_r_F": np.asarray(cpp_params.log_r_F, dtype=np.float64),
         "alpha_hat_t": np.asarray(cpp_params.alpha_hat_t, dtype=np.float64),
         "beta_hat_t": np.asarray(cpp_params.beta_hat_t, dtype=np.float64),
         "alpha_hat_tau": np.asarray(cpp_params.alpha_hat_tau, dtype=np.float64),

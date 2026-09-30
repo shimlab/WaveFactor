@@ -1,6 +1,6 @@
 #include "mocks.hpp"
 
-// Mock Parameters() instance, with dimension parameters given below, log(0.5) as the entry values of all probability parameters (log_p_pi, log_p_eta, log_r_pi, log_r_eta), and 1 for entries of all other parameters.
+// Mock Parameters() instance, with dimension parameters given below, log(0.5) as the entry values of all probability parameters (log_pi_L, log_pi_F, log_r_L, log_r_F), and 1 for entries of all other parameters.
 namespace mocks
 {
     // Mock constants
@@ -26,9 +26,8 @@ namespace mocks
           {1, 1, 1, 1},
           {1, 1, 1, 1}}}};
 
-    Tensor1D log_p_pi = {log_half, log_half};
-
-    Tensor2D log_p_eta = {{log_half, log_half, log_half},
+    Tensor1D log_pi_L = {log_half, log_half};
+    Tensor2D log_pi_F = {{log_half, log_half, log_half},
                           {log_half, log_half, log_half}};
 
     Tensor2D alpha_t = {{1, 1},
@@ -63,7 +62,7 @@ namespace mocks
           {1, 1, 1, 1},
           {1, 1, 1, 1}}}};
 
-    Tensor4D log_r_pi = {
+    Tensor4D log_r_L = {
         {{{log_half, log_half, log_half, log_half}},
          {{log_half, log_half, log_half, log_half},
           {log_half, log_half, log_half, log_half},
@@ -79,8 +78,8 @@ namespace mocks
     Tensor2D sigma_squared_F = {{1, 1, 1},
                                 {1, 1, 1}};
 
-    Tensor2D log_r_eta = {{log_half, log_half, log_half},
-                          {log_half, log_half, log_half}};
+    Tensor2D log_r_F = {{log_half, log_half, log_half},
+                        {log_half, log_half, log_half}};
 
     Tensor2D alpha_hat_t = {{1, 1},
                             {1, 1}};
@@ -96,18 +95,18 @@ namespace mocks
 
     Parameters parameters(n_resolutions, n_factors, n_features,
                           Y,
-                          log_p_pi,
-                          log_p_eta,
+                          log_pi_L,
+                          log_pi_F,
                           alpha_t,
                           beta_t,
                           alpha_tau,
                           beta_tau,
                           mu_L,
                           sigma_squared_L,
-                          log_r_pi,
+                          log_r_L,
                           mu_F,
                           sigma_squared_F,
-                          log_r_eta,
+                          log_r_F,
                           alpha_hat_t,
                           beta_hat_t,
                           alpha_hat_tau,
@@ -115,18 +114,18 @@ namespace mocks
     // Below is exactly same as parameters defined above. The reason to define it again is due to peculiar behaviour in linux where using the above parameter breaks some tests (likely due to some test interaction issues), despite not so in windows.
     Parameters parameters2(n_resolutions, n_factors, n_features,
                           Y,
-                          log_p_pi,
-                          log_p_eta,
+                          log_pi_L,
+                          log_pi_F,
                           alpha_t,
                           beta_t,
                           alpha_tau,
                           beta_tau,
                           mu_L,
                           sigma_squared_L,
-                          log_r_pi,
+                          log_r_L,
                           mu_F,
                           sigma_squared_F,
-                          log_r_eta,
+                          log_r_F,
                           alpha_hat_t,
                           beta_hat_t,
                           alpha_hat_tau,
@@ -157,24 +156,25 @@ namespace mocks
     // Mock values for testing updates
     const double update_sigma_squared_L_ijk_l = 1.0 / (1 + 0.5 * 2 * 3);
     const double update_mu_L_ijk_l = s_bar_F_ijk_l * update_sigma_squared_L_ijk_l;
-    const double update_pi_ijk_l_log_relative_pmf_0 = std::log(0.5);
-    const double update_pi_ijk_l_log_relative_pmf_1 = std::log(
+    const double update_Z_L_log_relative_pmf_0 = std::log(0.5);
+    const double update_Z_L_log_relative_pmf_1 = std::log(
         std::sqrt(2 * M_PI * update_sigma_squared_L_ijk_l) *
         std::exp(0.5 * (theta_t_i_l + std::pow(update_mu_L_ijk_l, 2) / update_sigma_squared_L_ijk_l)) *
         0.5);
-    const double update_log_r_pi_ijk_l = std::log(
-        std::exp(update_pi_ijk_l_log_relative_pmf_1) /
-        (std::exp(update_pi_ijk_l_log_relative_pmf_0) + std::exp(update_pi_ijk_l_log_relative_pmf_1)));
+    const double update_log_r_L_ijk_l = std::log(
+        std::exp(update_Z_L_log_relative_pmf_1) /
+        (std::exp(update_Z_L_log_relative_pmf_0) + std::exp(update_Z_L_log_relative_pmf_1)));
+
     const double update_sigma_squared_F_i_j = 1.0 / (1 + 0.5 * 2 * 16);
     const double update_mu_F_i_j = s_bar_L_i_j * update_sigma_squared_F_i_j;
-    const double update_eta_i_j_log_relative_pmf_0 = std::log(0.5);
-    const double update_eta_i_j_log_relative_pmf_1 = std::log(
+    const double update_Z_F_log_relative_pmf_0 = std::log(0.5);
+    const double update_Z_F_log_relative_pmf_1 = std::log(
         std::sqrt(2 * M_PI * update_sigma_squared_F_i_j) *
         std::exp(0.5 * (-std::log(2 * M_PI) + std::pow(update_mu_F_i_j, 2) / update_sigma_squared_F_i_j)) *
         0.5);
-    const double update_log_r_eta_i_j = std::log(
-        std::exp(update_eta_i_j_log_relative_pmf_1) /
-        (std::exp(update_eta_i_j_log_relative_pmf_0) + std::exp(update_eta_i_j_log_relative_pmf_1)));
+    const double update_log_r_F_i_j = std::log(
+        std::exp(update_Z_F_log_relative_pmf_1) /
+        (std::exp(update_Z_F_log_relative_pmf_0) + std::exp(update_Z_F_log_relative_pmf_1)));
 
     const double update_alpha_hat_tau_i_l_0 = 4.0 / 2 + 1;
     const double update_alpha_hat_tau_i_l_1 = 12.0 / 2 + 1;
@@ -188,15 +188,15 @@ namespace mocks
 
     // For testing cavi_elbo
     const double E_log_likelihood_Y_ijk_l_given_pi_L_F_tau = 0.5 * (theta_tau_i_l - gamma_tau_i_l * (1.0 - 2 * 2 * 0.5 * 0.5 + 2 * std::pow(0.5, 4) + 2 * 0.5 * 2 * 0.5 * 2));
-    const double E_log_likelihood_L_ijk_l_given_pi_t = 0.5 * (0.5 * theta_t_i_l - gamma_t_i_l * lambda_L_ijk_l);
-    const double E_log_likelihood_F_i_j_given_eta = -0.5 * (0.5 * std::log(2 * M_PI) + lambda_F_i_j);
-    const double E_log_likelihood_pi_ijk_l = 0.5 * std::log(0.5) + (1 - 0.5) * std::log(1 - 0.5);
-    const double E_log_likelihood_eta_i_j = 0.5 * std::log(0.5) + (1 - 0.5) * std::log(1 - 0.5);
+    const double E_log_likelihood_L_ijk_l_given_Z_L_t = 0.5 * (0.5 * theta_t_i_l - gamma_t_i_l * lambda_L_ijk_l);
+    const double E_log_likelihood_F_i_j_given_Z_F = -0.5 * (0.5 * std::log(2 * M_PI) + lambda_F_i_j);
+    const double E_log_likelihood_Z_L_ijk_l = 0.5 * std::log(0.5) + (1 - 0.5) * std::log(1 - 0.5);
+    const double E_log_likelihood_Z_F_i_j = 0.5 * std::log(0.5) + (1 - 0.5) * std::log(1 - 0.5);
     const double E_log_likelihood_t_i_l = -gamma_t_i_l - std::lgamma(1);
     const double E_log_likelihood_tau_i_l = -gamma_tau_i_l - std::lgamma(1);
-    const double E_negative_variational_log_likelihood_L_ijk_l_pi_ijk_l = ((0.5 / 2) * (std::log(2 * M_PI * 1) + 1) - 0.5 * std::log(0.5) - (1 - 0.5) * std::log(1 - 0.5));
-    const double E_negative_variational_log_likelihood_F_i_j_eta_i_j = ((0.5 / 2) * (std::log(2 * M_PI * 1) + 1) - 0.5 * std::log(0.5) - (1 - 0.5) * std::log(1 - 0.5));
+    const double E_negative_variational_log_likelihood_L_ijk_l_Z_L_ijk_l = ((0.5 / 2) * (std::log(2 * M_PI * 1) + 1) - 0.5 * std::log(0.5) - (1 - 0.5) * std::log(1 - 0.5));
+    const double E_negative_variational_log_likelihood_F_i_j_Z_F_i_j = ((0.5 / 2) * (std::log(2 * M_PI * 1) + 1) - 0.5 * std::log(0.5) - (1 - 0.5) * std::log(1 - 0.5));
     const double E_negative_variational_log_likelihood_t_i_l = 1 + std::lgamma(1);
     const double E_negative_variational_log_likelihood_tau_i_l = 1 + std::lgamma(1);
-    const double elbo = (16 * 3 * E_log_likelihood_Y_ijk_l_given_pi_L_F_tau + 16 * 2 * E_log_likelihood_L_ijk_l_given_pi_t + 2 * 3 * E_log_likelihood_F_i_j_given_eta + 16 * 2 * E_log_likelihood_pi_ijk_l + 2 * 3 * E_log_likelihood_eta_i_j + 2 * 2 * E_log_likelihood_t_i_l + 2 * 3 * E_log_likelihood_tau_i_l + 16 * 2 * E_negative_variational_log_likelihood_L_ijk_l_pi_ijk_l + 2 * 3 * E_negative_variational_log_likelihood_F_i_j_eta_i_j + 2 * 2 * E_negative_variational_log_likelihood_t_i_l + 2 * 3 * E_negative_variational_log_likelihood_tau_i_l);
+    const double elbo = (16 * 3 * E_log_likelihood_Y_ijk_l_given_pi_L_F_tau + 16 * 2 * E_log_likelihood_L_ijk_l_given_Z_L_t + 2 * 3 * E_log_likelihood_F_i_j_given_Z_F + 16 * 2 * E_log_likelihood_Z_L_ijk_l + 2 * 3 * E_log_likelihood_Z_F_i_j + 2 * 2 * E_log_likelihood_t_i_l + 2 * 3 * E_log_likelihood_tau_i_l + 16 * 2 * E_negative_variational_log_likelihood_L_ijk_l_Z_L_ijk_l + 2 * 3 * E_negative_variational_log_likelihood_F_i_j_Z_F_i_j + 2 * 2 * E_negative_variational_log_likelihood_t_i_l + 2 * 3 * E_negative_variational_log_likelihood_tau_i_l);
 }

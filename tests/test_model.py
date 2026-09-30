@@ -65,6 +65,9 @@ def test_wavefactor_estimator_fit_transform():
     assert np.array_equal(res.grid_x, res.spot_grid_coords[:, 0])
     assert np.array_equal(res.grid_y, res.spot_grid_coords[:, 1])
     assert res.gene_pip.shape == (K, N_genes)
+    assert np.array_equal(model.gene_pip_, res.gene_pip)
+    assert len(res.spatial_pip) == K
+    assert len(model.spatial_pip_) == K
     # Test full variational distribution properties
     assert isinstance(res.mu_L, list)
     assert isinstance(res.sigma_squared_L, list)

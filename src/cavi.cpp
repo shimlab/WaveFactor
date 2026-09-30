@@ -5,7 +5,6 @@ CaviDimensions::CaviDimensions(int factors, int resolutions, int features, int s
       n_resolutions(resolutions),
       n_features(features),
       n_spots(spots),
-      p_pi_shape(resolutions),
       ab_t_shape({resolutions, factors}),
       ab_tau_shape({resolutions, features}),
       F_shape({factors, features}),
@@ -123,7 +122,7 @@ CaviResult cavi(Parameters &parameters, int max_iterations, double relative_elbo
         // Run one iteration of CAVI updates
         Parameters new_parameters = parameters; // Copy construction
 
-        // For L_ijk_l, pi_ijk_l related updates
+        // For L_ijk_l, Z_L_ijk_l related updates
         for (int l = 0; l < n_factors; ++l)
         {
             for (int i = 0; i < n_resolutions; ++i)
@@ -132,24 +131,24 @@ CaviResult cavi(Parameters &parameters, int max_iterations, double relative_elbo
                 {
                     for (std::size_t k = 0; k < Y[l][i][j].size(); ++k)
                     {
-                        UpdateLPIResult L_pi_ijk_l_update = compute_update_L_pi(i, j, k, l, new_parameters);
-                        new_parameters.sigma_squared_L[l][i][j][k] = L_pi_ijk_l_update.sigma_squared_L;
-                        new_parameters.mu_L[l][i][j][k] = L_pi_ijk_l_update.mu_L;
-                        new_parameters.log_r_pi[l][i][j][k] = L_pi_ijk_l_update.log_r_pi;
+                        UpdateLZLResult L_Z_L_update = compute_update_L_Z_L(i, j, k, l, new_parameters);
+                        new_parameters.sigma_squared_L[l][i][j][k] = L_Z_L_update.sigma_squared_L;
+                        new_parameters.mu_L[l][i][j][k] = L_Z_L_update.mu_L;
+                        new_parameters.log_r_L[l][i][j][k] = L_Z_L_update.log_r_L;
                     }
                 }
             }
         }
 
-        // For F_i_j, eta_i_j related updates
+        // For F_i_j, Z_F_i_j related updates
         for (int i = 0; i < n_factors; ++i)
         {
             for (int j = 0; j < n_features; ++j)
             {
-                UpdateFEtaResult F_eta_ij_update = compute_update_F_eta(i, j, new_parameters);
-                new_parameters.sigma_squared_F[i][j] = F_eta_ij_update.sigma_squared_F;
-                new_parameters.mu_F[i][j] = F_eta_ij_update.mu_F;
-                new_parameters.log_r_eta[i][j] = F_eta_ij_update.log_r_eta;
+                UpdateFZFResult F_Z_F_update = compute_update_F_Z_F(i, j, new_parameters);
+                new_parameters.sigma_squared_F[i][j] = F_Z_F_update.sigma_squared_F;
+                new_parameters.mu_F[i][j] = F_Z_F_update.mu_F;
+                new_parameters.log_r_F[i][j] = F_Z_F_update.log_r_F;
             }
         }
 
