@@ -99,8 +99,7 @@ def init_parameters(
 
     mu_F = (rng.rand(*F_shape) * 20.0 - 10.0).astype(np.float64)
     sigma_squared_F = (rng.rand(*F_shape) * 9.99 + 0.01).astype(np.float64)
-    r_F = (rng.rand(*F_shape) * 0.98 + 0.01).astype(np.float64)
-    log_r_F = np.log(r_F)
+    log_r_F = np.log((rng.rand(*F_shape) * 0.98 + 0.01).astype(np.float64))
     alpha_hat_t = (rng.rand(*ab_t_shape) * 9.99 + 0.01).astype(np.float64)
     beta_hat_t = (rng.rand(*ab_t_shape) * 9.99 + 0.01).astype(np.float64)
     alpha_hat_tau = (rng.rand(*ab_tau_shape) * 9.99 + 0.01).astype(np.float64)
@@ -155,28 +154,23 @@ def init_parameters(
 
 def build_parameters_cpp(parameters: Dict[str, Any], cpp_backend: Any) -> Any:
     """Instantiates C++ Parameters class object from Python parameters dictionary."""
-    log_pi_L = parameters["log_pi_L"]
-    log_pi_F = parameters["log_pi_F"]
-    log_r_L = parameters["log_r_L"]
-    log_r_F = parameters["log_r_F"]
-
     return cpp_backend.Parameters(
         parameters["n_resolutions"],
         parameters["n_factors"],
         parameters["n_features"],
         parameters["Y"],
-        log_pi_L.tolist() if isinstance(log_pi_L, np.ndarray) else log_pi_L,
-        log_pi_F.tolist() if isinstance(log_pi_F, np.ndarray) else log_pi_F,
+        parameters["log_pi_L"].tolist() if isinstance(parameters["log_pi_L"], np.ndarray) else parameters["log_pi_L"],
+        parameters["log_pi_F"].tolist() if isinstance(parameters["log_pi_F"], np.ndarray) else parameters["log_pi_F"],
         parameters["alpha_t"].tolist() if isinstance(parameters["alpha_t"], np.ndarray) else parameters["alpha_t"],
         parameters["beta_t"].tolist() if isinstance(parameters["beta_t"], np.ndarray) else parameters["beta_t"],
         parameters["alpha_tau"].tolist() if isinstance(parameters["alpha_tau"], np.ndarray) else parameters["alpha_tau"],
         parameters["beta_tau"].tolist() if isinstance(parameters["beta_tau"], np.ndarray) else parameters["beta_tau"],
         parameters["mu_L"],
         parameters["sigma_squared_L"],
-        log_r_L,
+        parameters["log_r_L"],
         parameters["mu_F"].tolist() if isinstance(parameters["mu_F"], np.ndarray) else parameters["mu_F"],
         parameters["sigma_squared_F"].tolist() if isinstance(parameters["sigma_squared_F"], np.ndarray) else parameters["sigma_squared_F"],
-        log_r_F.tolist() if isinstance(log_r_F, np.ndarray) else log_r_F,
+        parameters["log_r_F"].tolist() if isinstance(parameters["log_r_F"], np.ndarray) else parameters["log_r_F"],
         parameters["alpha_hat_t"].tolist() if isinstance(parameters["alpha_hat_t"], np.ndarray) else parameters["alpha_hat_t"],
         parameters["beta_hat_t"].tolist() if isinstance(parameters["beta_hat_t"], np.ndarray) else parameters["beta_hat_t"],
         parameters["alpha_hat_tau"].tolist() if isinstance(parameters["alpha_hat_tau"], np.ndarray) else parameters["alpha_hat_tau"],
@@ -186,28 +180,23 @@ def build_parameters_cpp(parameters: Dict[str, Any], cpp_backend: Any) -> Any:
 
 def extract_cpp_parameters_to_dict(cpp_params: Any) -> Dict[str, Any]:
     """Converts a C++ Parameters Pybind11 object to a standard Python dictionary."""
-    log_pi_L = np.asarray(cpp_params.log_pi_L, dtype=np.float64)
-    log_pi_F = np.asarray(cpp_params.log_pi_F, dtype=np.float64)
-    log_r_L = cpp_params.log_r_L
-    log_r_F = np.asarray(cpp_params.log_r_F, dtype=np.float64)
-
     return {
         "n_resolutions": cpp_params.n_resolutions,
         "n_factors": cpp_params.n_factors,
         "n_features": cpp_params.n_features,
         "Y": cpp_params.Y,
-        "log_pi_L": log_pi_L,
-        "log_pi_F": log_pi_F,
+        "log_pi_L": np.asarray(cpp_params.log_pi_L, dtype=np.float64),
+        "log_pi_F": np.asarray(cpp_params.log_pi_F, dtype=np.float64),
         "alpha_t": np.asarray(cpp_params.alpha_t, dtype=np.float64),
         "beta_t": np.asarray(cpp_params.beta_t, dtype=np.float64),
         "alpha_tau": np.asarray(cpp_params.alpha_tau, dtype=np.float64),
         "beta_tau": np.asarray(cpp_params.beta_tau, dtype=np.float64),
         "mu_L": cpp_params.mu_L,
         "sigma_squared_L": cpp_params.sigma_squared_L,
-        "log_r_L": log_r_L,
+        "log_r_L": cpp_params.log_r_L,
         "mu_F": np.asarray(cpp_params.mu_F, dtype=np.float64),
         "sigma_squared_F": np.asarray(cpp_params.sigma_squared_F, dtype=np.float64),
-        "log_r_F": log_r_F,
+        "log_r_F": np.asarray(cpp_params.log_r_F, dtype=np.float64),
         "alpha_hat_t": np.asarray(cpp_params.alpha_hat_t, dtype=np.float64),
         "beta_hat_t": np.asarray(cpp_params.beta_hat_t, dtype=np.float64),
         "alpha_hat_tau": np.asarray(cpp_params.alpha_hat_tau, dtype=np.float64),

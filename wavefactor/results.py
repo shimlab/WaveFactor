@@ -180,16 +180,6 @@ class WaveFactorResult:
         return self._apply_exp_nested(log_r_L)
 
     @property
-    def r_F(self) -> np.ndarray:
-        """Gene posterior inclusion probabilities r_F in R^(K x G)."""
-        return self.gene_pip
-
-    @property
-    def r_L(self) -> List:
-        """Spatial wavelet posterior inclusion probabilities r_L (nested resolution lists)."""
-        return self.spatial_pip
-
-    @property
     def alpha_hat_t(self) -> np.ndarray:
         """Variational Gamma shape parameter alpha_hat_t for factor precision in R^(R x K)."""
         return np.asarray(self.parameters["alpha_hat_t"], dtype=np.float64)

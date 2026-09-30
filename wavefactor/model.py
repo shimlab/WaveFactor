@@ -260,16 +260,6 @@ class WaveFactor(BaseEstimator):
         return self.get_result().gene_pip
 
     @property
-    def r_L_(self) -> List:
-        """Posterior inclusion probabilities for spatial wavelet coefficients (r_L)."""
-        return self.get_result().r_L
-
-    @property
-    def r_F_(self) -> np.ndarray:
-        """Posterior inclusion probabilities for gene loadings (r_F)."""
-        return self.get_result().r_F
-
-    @property
     def precision_t_(self) -> np.ndarray:
         """Posterior factor precision expectation E[t]."""
         return self.get_result().precision_t
