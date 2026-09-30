@@ -3,29 +3,29 @@
 #include "mocks.hpp"
 #include <cmath>
 
-TEST(CaviElboTest, ComputeELogLikelihoodLijkLGivenPiT)
+TEST(CaviElboTest, ComputeELogLikelihoodYijkLGivenPiLFtau)
 {
     EXPECT_NEAR(compute_E_log_likelihood_Y_ijk_l_given_pi_L_F_tau(1, 1, 1, 1, mocks::parameters), mocks::E_log_likelihood_Y_ijk_l_given_pi_L_F_tau, 0.001);
 }
 
-TEST(CaviElboTest, ComputeELogLikelihoodLijklGivenPiT)
+TEST(CaviElboTest, ComputeELogLikelihoodLijklGivenZLt)
 {
-    EXPECT_NEAR(compute_E_log_likelihood_L_ijk_l_given_pi_t(1, 1, 1, 1, mocks::parameters), mocks::E_log_likelihood_L_ijk_l_given_pi_t, 0.001);
+    EXPECT_NEAR(compute_E_log_likelihood_L_ijk_l_given_Z_L_t(1, 1, 1, 1, mocks::parameters), mocks::E_log_likelihood_L_ijk_l_given_Z_L_t, 0.001);
 }
 
-TEST(CaviElboTest, ComputeELogLikelihoodFijGivenEta)
+TEST(CaviElboTest, ComputeELogLikelihoodFijGivenZF)
 {
-    EXPECT_NEAR(compute_E_log_likelihood_F_i_j_given_eta(1, 1, mocks::parameters), mocks::E_log_likelihood_F_i_j_given_eta, 0.001);
+    EXPECT_NEAR(compute_E_log_likelihood_F_i_j_given_Z_F(1, 1, mocks::parameters), mocks::E_log_likelihood_F_i_j_given_Z_F, 0.001);
 }
 
-TEST(CaviElboTest, ComputeELogLikelihoodPiijkl)
+TEST(CaviElboTest, ComputeELogLikelihoodZLijkl)
 {
-    EXPECT_NEAR(compute_E_log_likelihood_pi_ijk_l(1, 1, 1, 1, mocks::parameters), mocks::E_log_likelihood_pi_ijk_l, 0.001);
+    EXPECT_NEAR(compute_E_log_likelihood_Z_L_ijk_l(1, 1, 1, 1, mocks::parameters), mocks::E_log_likelihood_Z_L_ijk_l, 0.001);
 }
 
-TEST(CaviElboTest, ComputeELogLikelihoodEtaij)
+TEST(CaviElboTest, ComputeELogLikelihoodZFij)
 {
-    EXPECT_NEAR(compute_E_log_likelihood_eta_i_j(1, 1, mocks::parameters), mocks::E_log_likelihood_eta_i_j, 0.001);
+    EXPECT_NEAR(compute_E_log_likelihood_Z_F_i_j(1, 1, mocks::parameters), mocks::E_log_likelihood_Z_F_i_j, 0.001);
 }
 
 TEST(CaviElboTest, ComputeELogLikelihoodTil)
@@ -38,14 +38,14 @@ TEST(CaviElboTest, ComputeELogLikelihoodTauil)
     EXPECT_NEAR(compute_E_log_likelihood_tau_i_l(1, 1, mocks::parameters), mocks::E_log_likelihood_tau_i_l, 0.001);
 }
 
-TEST(CaviElboTest, ComputeENegativeVariationalLogLikelihoodLijklPiijkl)
+TEST(CaviElboTest, ComputeENegativeVariationalLogLikelihoodLijkl)
 {
-    EXPECT_NEAR(compute_E_negative_variational_log_likelihood_L_ijk_l_pi_ijk_l(1, 1, 1, 1, mocks::parameters), mocks::E_negative_variational_log_likelihood_L_ijk_l_pi_ijk_l, 0.001);
+    EXPECT_NEAR(compute_E_negative_variational_log_likelihood_L_ijk_l(1, 1, 1, 1, mocks::parameters), mocks::E_negative_variational_log_likelihood_L_ijk_l, 0.001);
 }
 
-TEST(CaviElboTest, ComputeENegativeVariationalLogLikelihoodFijEtaij)
+TEST(CaviElboTest, ComputeENegativeVariationalLogLikelihoodFij)
 {
-    EXPECT_NEAR(compute_E_negative_variational_log_likelihood_F_i_j_eta_i_j(1, 1, mocks::parameters), mocks::E_negative_variational_log_likelihood_F_i_j_eta_i_j, 0.001);
+    EXPECT_NEAR(compute_E_negative_variational_log_likelihood_F_i_j(1, 1, mocks::parameters), mocks::E_negative_variational_log_likelihood_F_i_j, 0.001);
 }
 
 TEST(CaviElboTest, ComputeENegativeVariationalLogLikelihoodTil)

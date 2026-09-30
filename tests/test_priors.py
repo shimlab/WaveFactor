@@ -22,24 +22,25 @@ def test_default_canonical_priors():
     priors = Priors()
     priors_dict = priors.build_priors_dict(dims)
 
-    assert "log_p_pi" in priors_dict
-    assert "log_p_eta" in priors_dict
+    # Canonical keys
+    assert "log_pi_L" in priors_dict
+    assert "log_pi_F" in priors_dict
     assert "alpha_t" in priors_dict
     assert "beta_t" in priors_dict
     assert "alpha_tau" in priors_dict
     assert "beta_tau" in priors_dict
 
     # Check shapes
-    assert priors_dict["log_p_pi"].shape == dims["p_pi_shape"]
-    assert priors_dict["log_p_eta"].shape == dims["F_shape"]
+    assert priors_dict["log_pi_L"].shape == (dims["n_resolutions"],)
+    assert priors_dict["log_pi_F"].shape == dims["F_shape"]
     assert priors_dict["alpha_t"].shape == dims["ab_t_shape"]
     assert priors_dict["beta_t"].shape == dims["ab_t_shape"]
     assert priors_dict["alpha_tau"].shape == dims["ab_tau_shape"]
     assert priors_dict["beta_tau"].shape == dims["ab_tau_shape"]
 
     # Baseline defaults
-    assert np.allclose(np.exp(priors_dict["log_p_pi"]), 0.5)
-    assert np.allclose(np.exp(priors_dict["log_p_eta"]), 0.5)
+    assert np.allclose(np.exp(priors_dict["log_pi_L"]), 0.5)
+    assert np.allclose(np.exp(priors_dict["log_pi_F"]), 0.5)
     assert np.allclose(priors_dict["alpha_t"], 1.0)
     assert np.allclose(priors_dict["beta_t"], 1.0)
     assert np.allclose(priors_dict["alpha_tau"], 1.0)
@@ -69,8 +70,8 @@ def test_custom_array_priors():
     )
     p_dict = priors.build_priors_dict(dims)
 
-    assert np.allclose(np.exp(p_dict["log_p_pi"]), custom_pi)
-    assert np.allclose(np.exp(p_dict["log_p_eta"]), custom_eta)
+    assert np.allclose(np.exp(p_dict["log_pi_L"]), custom_pi)
+    assert np.allclose(np.exp(p_dict["log_pi_F"]), custom_eta)
     assert np.allclose(p_dict["alpha_t"], custom_alpha_t)
     assert np.allclose(p_dict["beta_t"], custom_beta_t)
     assert np.allclose(p_dict["alpha_tau"], custom_alpha_tau)

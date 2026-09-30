@@ -18,18 +18,18 @@ namespace mocks
 
     // Mock tensor parameters
     extern Tensor4D Y;
-    extern Tensor1D log_p_pi;
-    extern Tensor2D log_p_eta;
+    extern Tensor1D log_pi_L;
+    extern Tensor2D log_pi_F;
     extern Tensor2D alpha_t;
     extern Tensor2D beta_t;
     extern Tensor2D alpha_tau;
     extern Tensor2D beta_tau;
     extern Tensor4D mu_L;
     extern Tensor4D sigma_squared_L;
-    extern Tensor4D log_r_pi;
+    extern Tensor4D log_r_L;
     extern Tensor2D mu_F;
     extern Tensor2D sigma_squared_F;
-    extern Tensor2D log_r_eta;
+    extern Tensor2D log_r_F;
     extern Tensor2D alpha_hat_t;
     extern Tensor2D beta_hat_t;
     extern Tensor2D alpha_hat_tau;
@@ -64,14 +64,14 @@ namespace mocks
     // Mock return values for functions in updates
     extern const double update_sigma_squared_L_ijk_l;
     extern const double update_mu_L_ijk_l;
-    extern const double update_pi_ijk_l_log_relative_pmf_0;
-    extern const double update_pi_ijk_l_log_relative_pmf_1;
-    extern const double update_log_r_pi_ijk_l;
+    extern const double update_Z_L_log_relative_pmf_0;
+    extern const double update_Z_L_log_relative_pmf_1;
+    extern const double update_log_r_L_ijk_l;
     extern const double update_sigma_squared_F_i_j;
     extern const double update_mu_F_i_j;
-    extern const double update_eta_i_j_log_relative_pmf_0;
-    extern const double update_eta_i_j_log_relative_pmf_1;
-    extern const double update_log_r_eta_i_j;
+    extern const double update_Z_F_log_relative_pmf_0;
+    extern const double update_Z_F_log_relative_pmf_1;
+    extern const double update_log_r_F_i_j;
 
     extern const double update_alpha_hat_tau_i_l_0;
     extern const double update_alpha_hat_tau_i_l_1;
@@ -85,14 +85,14 @@ namespace mocks
 
     // For testing cavi_elbo
     extern const double E_log_likelihood_Y_ijk_l_given_pi_L_F_tau;
-    extern const double E_log_likelihood_L_ijk_l_given_pi_t;
-    extern const double E_log_likelihood_F_i_j_given_eta;
-    extern const double E_log_likelihood_pi_ijk_l;
-    extern const double E_log_likelihood_eta_i_j;
+    extern const double E_log_likelihood_L_ijk_l_given_Z_L_t;
+    extern const double E_log_likelihood_F_i_j_given_Z_F;
+    extern const double E_log_likelihood_Z_L_ijk_l;
+    extern const double E_log_likelihood_Z_F_i_j;
     extern const double E_log_likelihood_t_i_l;
     extern const double E_log_likelihood_tau_i_l;
-    extern const double E_negative_variational_log_likelihood_L_ijk_l_pi_ijk_l;
-    extern const double E_negative_variational_log_likelihood_F_i_j_eta_i_j;
+    extern const double E_negative_variational_log_likelihood_L_ijk_l;
+    extern const double E_negative_variational_log_likelihood_F_i_j;
     extern const double E_negative_variational_log_likelihood_t_i_l;
     extern const double E_negative_variational_log_likelihood_tau_i_l;
     extern const double elbo;

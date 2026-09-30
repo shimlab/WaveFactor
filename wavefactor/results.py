@@ -127,12 +127,13 @@ class WaveFactorResult:
     def loadings(self) -> np.ndarray:
         """
         Factor-to-gene loadings matrix F in R^(K x G).
-        Computed as the expected gene loading E[F] = mu_F * r_eta.
+        Computed as the expected gene loading E[F] = mu_F * r_F.
         """
         if self._gene_loadings is None:
             mu_F = np.asarray(self.parameters["mu_F"], dtype=np.float64)
-            r_eta = np.exp(np.asarray(self.parameters["log_r_eta"], dtype=np.float64))
-            self._gene_loadings = mu_F * r_eta
+            log_r_F = self.parameters["log_r_F"]
+            r_F = np.exp(np.asarray(log_r_F, dtype=np.float64))
+            self._gene_loadings = mu_F * r_F
         return self._gene_loadings
 
     @property
@@ -149,7 +150,7 @@ class WaveFactorResult:
     def loadings_variance(self) -> np.ndarray:
         """
         Analytical posterior variance of gene loadings Var_q(F) in R^(K x G).
-        Var_q(F) = r_eta * sigma_F^2 + r_eta * (1 - r_eta) * mu_F^2.
+        Var_q(F) = r_F * sigma_F^2 + r_F * (1 - r_F) * mu_F^2.
         """
         r = self.gene_pip
         s2 = self.sigma_squared_F
@@ -168,14 +169,25 @@ class WaveFactorResult:
 
     @property
     def gene_pip(self) -> np.ndarray:
-        """Gene posterior inclusion probabilities r_eta in R^(K x G)."""
-        return np.exp(np.asarray(self.parameters["log_r_eta"], dtype=np.float64))
+        """Gene posterior inclusion probabilities r_F in R^(K x G)."""
+        log_r_F = self.parameters["log_r_F"]
+        return np.exp(np.asarray(log_r_F, dtype=np.float64))
 
     @property
     def spatial_pip(self) -> List:
-        """Spatial wavelet posterior inclusion probabilities r_pi (nested resolution lists)."""
-        log_r_pi = self.parameters["log_r_pi"]
-        return self._apply_exp_nested(log_r_pi)
+        """Spatial wavelet posterior inclusion probabilities r_L (nested resolution lists)."""
+        log_r_L = self.parameters["log_r_L"]
+        return self._apply_exp_nested(log_r_L)
+
+    @property
+    def r_F(self) -> np.ndarray:
+        """Gene posterior inclusion probabilities r_F in R^(K x G)."""
+        return self.gene_pip
+
+    @property
+    def r_L(self) -> List:
+        """Spatial wavelet posterior inclusion probabilities r_L (nested resolution lists)."""
+        return self.spatial_pip
 
     @property
     def alpha_hat_t(self) -> np.ndarray:
@@ -212,7 +224,7 @@ class WaveFactorResult:
         K = self.n_factors
         R = self.n_resolutions
         mu_L = self.parameters["mu_L"]
-        log_r_pi = self.parameters["log_r_pi"]
+        log_r_L = self.parameters["log_r_L"]
         n_y, n_x = self.grid_shape
 
         factor_maps = np.zeros((n_y, n_x, K), dtype=np.float64)
@@ -221,7 +233,7 @@ class WaveFactorResult:
             coeffs = []
             # Approximation level 0 (1 matrix)
             approx_mu = np.asarray(mu_L[l][0][0], dtype=np.float64)
-            approx_r = np.exp(np.asarray(log_r_pi[l][0][0], dtype=np.float64))
+            approx_r = np.exp(np.asarray(log_r_L[l][0][0], dtype=np.float64))
             approx_vals = approx_mu * approx_r
             side_0 = int(round(np.sqrt(len(approx_vals))))
             coeffs.append(approx_vals.reshape((side_0, side_0)))
@@ -231,7 +243,7 @@ class WaveFactorResult:
                 detail_tuple = []
                 for j in range(3):
                     det_mu = np.asarray(mu_L[l][r][j], dtype=np.float64)
-                    det_r = np.exp(np.asarray(log_r_pi[l][r][j], dtype=np.float64))
+                    det_r = np.exp(np.asarray(log_r_L[l][r][j], dtype=np.float64))
                     det_vals = det_mu * det_r
                     side_r = int(round(np.sqrt(len(det_vals))))
                     detail_tuple.append(det_vals.reshape((side_r, side_r)))

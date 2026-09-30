@@ -50,9 +50,9 @@ double compute_elbo(const Parameters &parameters)
     {
         for (int j = 0; j < n_features; ++j)
         {
-            elbo += compute_E_log_likelihood_F_i_j_given_eta(i, j, parameters);
-            elbo += compute_E_log_likelihood_eta_i_j(i, j, parameters);
-            elbo += compute_E_negative_variational_log_likelihood_F_i_j_eta_i_j(i, j, parameters);
+            elbo += compute_E_log_likelihood_F_i_j_given_Z_F(i, j, parameters);
+            elbo += compute_E_log_likelihood_Z_F_i_j(i, j, parameters);
+            elbo += compute_E_negative_variational_log_likelihood_F_i_j(i, j, parameters);
         }
     }
 
@@ -85,9 +85,9 @@ double compute_elbo(const Parameters &parameters)
             {
                 for (int k = 0; k < parameters.mu_L[l][i][j].size(); ++k)
                 {
-                    elbo += compute_E_log_likelihood_L_ijk_l_given_pi_t(i, j, k, l, parameters);
-                    elbo += compute_E_log_likelihood_pi_ijk_l(i, j, k, l, parameters);
-                    elbo += compute_E_negative_variational_log_likelihood_L_ijk_l_pi_ijk_l(i, j, k, l, parameters);
+                    elbo += compute_E_log_likelihood_L_ijk_l_given_Z_L_t(i, j, k, l, parameters);
+                    elbo += compute_E_log_likelihood_Z_L_ijk_l(i, j, k, l, parameters);
+                    elbo += compute_E_negative_variational_log_likelihood_L_ijk_l(i, j, k, l, parameters);
                 }
             }
         }

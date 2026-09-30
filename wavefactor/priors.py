@@ -3,8 +3,8 @@ Priors module for WaveFactor.
 
 Provides flexible, canonical tensor prior specifications for Bayesian wavelet factor modeling.
 Supports exact mathematical tensor dimensions matching C++ CAVI updates:
-  - spatial_prior: 1D array of shape (n_resolutions,)
-  - gene_prior: 2D array of shape (n_factors, n_features)
+  - spatial_prior: 1D array of shape (n_resolutions,) (pi_L)
+  - gene_prior: 2D array of shape (n_factors, n_features) (pi_F)
   - alpha_t, beta_t: 2D array of shape (n_resolutions, n_factors)
   - alpha_tau, beta_tau: 2D array of shape (n_resolutions, n_features)
 """
@@ -20,11 +20,11 @@ class Priors:
     Parameters
     ----------
     spatial_prior : np.ndarray, optional
-        Prior inclusion probabilities for spatial wavelet coefficients (pi).
+        Prior inclusion probabilities for spatial wavelet coefficients (pi_L).
         Must be a 1D array of shape (n_resolutions,) with values in (0, 1).
         Default (None): uninformative flat baseline np.full(n_resolutions, 0.5).
     gene_prior : np.ndarray, optional
-        Prior inclusion probabilities for gene loadings (eta).
+        Prior inclusion probabilities for gene loadings (pi_F).
         Must be a 2D array of shape (n_factors, n_features) with values in (0, 1).
         Default (None): standard baseline np.full((n_factors, n_features), 0.5).
     alpha_t : np.ndarray, optional
@@ -74,12 +74,12 @@ class Priors:
         ----------
         dimensions : dict
             Dictionary containing 'n_resolutions', 'n_factors', 'n_features',
-            'p_pi_shape', 'F_shape', 'ab_t_shape', 'ab_tau_shape'.
+            'pi_L_shape', 'F_shape', 'ab_t_shape', 'ab_tau_shape'.
 
         Returns
         -------
         dict
-            Dictionary with keys 'log_p_pi', 'log_p_eta', 'alpha_t', 'beta_t',
+            Dictionary with keys 'log_pi_L', 'log_pi_F', 'alpha_t', 'beta_t',
             'alpha_tau', 'beta_tau'.
         """
         n_resolutions = dimensions["n_resolutions"]
@@ -88,7 +88,7 @@ class Priors:
         ab_t_shape = dimensions["ab_t_shape"]
         ab_tau_shape = dimensions["ab_tau_shape"]
 
-        # 1. Resolve spatial prior p_pi (1D array)
+        # 1. Resolve spatial prior pi_L (1D array)
         if self.spatial_prior is not None:
             if not isinstance(self.spatial_prior, np.ndarray) or self.spatial_prior.ndim != 1:
                 raise TypeError("spatial_prior must be a 1D numpy array of shape (n_resolutions,)")
@@ -98,13 +98,13 @@ class Priors:
                 )
             if np.any(self.spatial_prior <= 0.0) or np.any(self.spatial_prior >= 1.0):
                 raise ValueError("All spatial_prior probabilities must be strictly in (0, 1)")
-            p_pi = self.spatial_prior.astype(np.float64)
+            pi_L = self.spatial_prior.astype(np.float64)
         else:
-            p_pi = np.full(n_resolutions, 0.5, dtype=np.float64)
+            pi_L = np.full(n_resolutions, 0.5, dtype=np.float64)
 
-        log_p_pi = np.log(np.clip(p_pi, self.eps, 1.0 - self.eps))
+        log_pi_L = np.log(np.clip(pi_L, self.eps, 1.0 - self.eps))
 
-        # 2. Resolve gene prior p_eta (2D array)
+        # 2. Resolve gene prior pi_F (2D array)
         if self.gene_prior is not None:
             if not isinstance(self.gene_prior, np.ndarray) or self.gene_prior.ndim != 2:
                 raise TypeError("gene_prior must be a 2D numpy array of shape (n_factors, n_features)")
@@ -114,11 +114,11 @@ class Priors:
                 )
             if np.any(self.gene_prior <= 0.0) or np.any(self.gene_prior >= 1.0):
                 raise ValueError("All gene_prior probabilities must be strictly in (0, 1)")
-            p_eta = self.gene_prior.astype(np.float64)
+            pi_F = self.gene_prior.astype(np.float64)
         else:
-            p_eta = np.full((n_factors, n_features), 0.5, dtype=np.float64)
+            pi_F = np.full((n_factors, n_features), 0.5, dtype=np.float64)
 
-        log_p_eta = np.log(np.clip(p_eta, self.eps, 1.0 - self.eps))
+        log_pi_F = np.log(np.clip(pi_F, self.eps, 1.0 - self.eps))
 
         # 3. Resolve precision priors for t (factor precision)
         if self.alpha_t is not None:
@@ -159,8 +159,8 @@ class Priors:
             beta_tau = np.ones(ab_tau_shape, dtype=np.float64)
 
         return {
-            "log_p_pi": log_p_pi,
-            "log_p_eta": log_p_eta,
+            "log_pi_L": log_pi_L,
+            "log_pi_F": log_pi_F,
             "alpha_t": alpha_t,
             "beta_t": beta_t,
             "alpha_tau": alpha_tau,
