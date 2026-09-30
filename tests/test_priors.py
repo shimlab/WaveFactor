@@ -53,16 +53,16 @@ def test_custom_array_priors():
     K = dims["n_factors"]      # 3
     G = dims["n_features"]     # 4
 
-    custom_pi = np.array([0.9, 0.6, 0.2])
-    custom_eta = np.full((K, G), 0.15)
+    custom_pi_L = np.array([0.9, 0.6, 0.2])
+    custom_pi_F = np.full((K, G), 0.15)
     custom_alpha_t = np.full((R, K), 2.0)
     custom_beta_t = np.full((R, K), 1.5)
     custom_alpha_tau = np.full((R, G), 0.8)
     custom_beta_tau = np.full((R, G), 0.5)
 
     priors = Priors(
-        spatial_prior=custom_pi,
-        gene_prior=custom_eta,
+        spatial_prior=custom_pi_L,
+        gene_prior=custom_pi_F,
         alpha_t=custom_alpha_t,
         beta_t=custom_beta_t,
         alpha_tau=custom_alpha_tau,
@@ -70,8 +70,8 @@ def test_custom_array_priors():
     )
     p_dict = priors.build_priors_dict(dims)
 
-    assert np.allclose(np.exp(p_dict["log_pi_L"]), custom_pi)
-    assert np.allclose(np.exp(p_dict["log_pi_F"]), custom_eta)
+    assert np.allclose(np.exp(p_dict["log_pi_L"]), custom_pi_L)
+    assert np.allclose(np.exp(p_dict["log_pi_F"]), custom_pi_F)
     assert np.allclose(p_dict["alpha_t"], custom_alpha_t)
     assert np.allclose(p_dict["beta_t"], custom_beta_t)
     assert np.allclose(p_dict["alpha_tau"], custom_alpha_tau)
