@@ -9,7 +9,7 @@ const double EFFECTIVE_ONE = 1.0 - EFFECTIVE_THRESHOLD;
 const double EFFECTIVE_LOG_ZERO = std::log(EFFECTIVE_ZERO);
 const double EFFECTIVE_LOG_ONE = std::log(EFFECTIVE_ONE);
 
-// For L_ijk_l, pi_ijk_l related updates
+// For L_ijk_l, Z_L_ijk_l related updates
 double compute_update_sigma_squared_L(int i, int j, int k, int l, const Parameters &parameters)
 {
     double gamma_t_i_l = gamma_t(i, l, parameters);
