@@ -135,6 +135,7 @@ CaviResult cavi(Parameters &parameters, int max_iterations, double relative_elbo
                         new_parameters.sigma_squared_L[l][i][j][k] = L_Z_L_update.sigma_squared_L;
                         new_parameters.mu_L[l][i][j][k] = L_Z_L_update.mu_L;
                         new_parameters.log_r_L[l][i][j][k] = L_Z_L_update.log_r_L;
+                        new_parameters.r_L[l][i][j][k] = std::exp(L_Z_L_update.log_r_L);
                     }
                 }
             }
@@ -149,6 +150,7 @@ CaviResult cavi(Parameters &parameters, int max_iterations, double relative_elbo
                 new_parameters.sigma_squared_F[i][j] = F_Z_F_update.sigma_squared_F;
                 new_parameters.mu_F[i][j] = F_Z_F_update.mu_F;
                 new_parameters.log_r_F[i][j] = F_Z_F_update.log_r_F;
+                new_parameters.r_F[i][j] = std::exp(F_Z_F_update.log_r_F);
             }
         }
 

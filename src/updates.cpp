@@ -198,7 +198,7 @@ double compute_update_alpha_hat_t(int i, int l, const Parameters &parameters)
     {
         for (size_t k = 0; k < parameters.Y[l][i][j].size(); ++k)
         {
-            r_sum += std::exp(parameters.log_r_L[l][i][j][k]);
+            r_sum += parameters.r_L[l][i][j][k];
         }
     }
 

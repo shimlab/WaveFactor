@@ -31,21 +31,21 @@ double gamma_tau(int i, int l, const Parameters &parameters)
 
 double xi_L(int i, int j, int k, int l, const Parameters &parameters)
 {
-    double r_L_ijk_l = std::exp(parameters.log_r_L[l][i][j][k]);
+    double r_L_ijk_l = parameters.r_L[l][i][j][k];
     double mu_L_ijk_l = parameters.mu_L[l][i][j][k];
     return r_L_ijk_l * mu_L_ijk_l;
 }
 
 double xi_F(int i, int j, const Parameters &parameters)
 {
-    double r_F_i_j = std::exp(parameters.log_r_F[i][j]);
+    double r_F_i_j = parameters.r_F[i][j];
     double mu_F_i_j = parameters.mu_F[i][j];
     return r_F_i_j * mu_F_i_j;
 }
 
 double lambda_L(int i, int j, int k, int l, const Parameters &parameters)
 {
-    double r_L_ijk_l = std::exp(parameters.log_r_L[l][i][j][k]);
+    double r_L_ijk_l = parameters.r_L[l][i][j][k];
     double mu_L_ijk_l = parameters.mu_L[l][i][j][k];
     double sigma_squared_L_ijk_l = parameters.sigma_squared_L[l][i][j][k];
     return r_L_ijk_l * (sigma_squared_L_ijk_l + mu_L_ijk_l * mu_L_ijk_l);
@@ -53,7 +53,7 @@ double lambda_L(int i, int j, int k, int l, const Parameters &parameters)
 
 double lambda_F(int i, int j, const Parameters &parameters)
 {
-    double r_F_i_j = std::exp(parameters.log_r_F[i][j]);
+    double r_F_i_j = parameters.r_F[i][j];
     double mu_F_i_j = parameters.mu_F[i][j];
     double sigma_squared_F_i_j = parameters.sigma_squared_F[i][j];
     return r_F_i_j * (sigma_squared_F_i_j + mu_F_i_j * mu_F_i_j);
