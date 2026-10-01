@@ -25,7 +25,6 @@ double compute_update_mu_L(int i, int j, int k, int l, double update_sigma_squar
 
 double compute_update_Z_L_log_relative_pmf(int i, int j, int k, int l, int z_L, double update_sigma_squared_L_ijk_l, double update_mu_L_ijk_l, const Parameters &parameters)
 {
-    double theta_t_i_l = theta_t(i, l, parameters);
     double log_pi_L_i = parameters.log_pi_L[i];
     double pi_L_i = exp(log_pi_L_i);
 
@@ -34,6 +33,7 @@ double compute_update_Z_L_log_relative_pmf(int i, int j, int k, int l, int z_L, 
     double log_bernoulli_factor = (z_L == 1) ? log_pi_L_i : log(1 - pi_L_i);
     if (z_L == 1)
     {
+        double theta_t_i_l = theta_t(i, l, parameters);
         log_scaling_factor = 0.5 * (log(2) + log(M_PI) + log(update_sigma_squared_L_ijk_l));
         log_exp_factor = 0.5 * (theta_t_i_l + update_mu_L_ijk_l * update_mu_L_ijk_l / update_sigma_squared_L_ijk_l);
     }
@@ -148,8 +148,11 @@ double compute_update_beta_hat_tau(int i, int l, const Parameters &parameters)
 {
     double beta_tau_i_l = parameters.beta_tau[i][l];
 
-    // Calculate Y_squared_sum
     double Y_squared_sum = 0.0;
+    double Y_xi_sum = 0.0;
+    double lambda_xi_sum = 0.0;
+    double xi_product_sum = 0.0;
+
     size_t max_j = parameters.Y[l][i].size();
     size_t max_m = parameters.n_factors;
     for (size_t j = 0; j < max_j; ++j)
@@ -159,53 +162,17 @@ double compute_update_beta_hat_tau(int i, int l, const Parameters &parameters)
         {
             double Y_ijk_l = parameters.Y[l][i][j][k];
             Y_squared_sum += Y_ijk_l * Y_ijk_l;
-        }
-    }
 
-    // Calculate Y_xi_sum
-    double Y_xi_sum = 0.0;
-    for (size_t j = 0; j < max_j; ++j)
-    {
-        size_t max_k = parameters.Y[l][i][j].size();
-        for (size_t k = 0; k < max_k; ++k)
-        {
-            double Y_ijk_l = parameters.Y[l][i][j][k];
+            double xi_sum_m = 0.0;
             for (size_t m = 0; m < max_m; ++m)
             {
-                Y_xi_sum += Y_ijk_l * xi_L(i, j, k, m, parameters) * xi_F(m, l, parameters);
-            }
-        }
-    }
-
-    // Calculate lambda_xi_sum
-    double lambda_xi_sum = 0.0;
-    for (size_t j = 0; j < max_j; ++j)
-    {
-        size_t max_k = parameters.Y[l][i][j].size();
-        for (size_t k = 0; k < max_k; ++k)
-        {
-            for (size_t m = 0; m < max_m; ++m)
-            {
-                double lambda_product = lambda_L(i, j, k, m, parameters) * lambda_F(m, l, parameters);
                 double xi_product = xi_L(i, j, k, m, parameters) * xi_F(m, l, parameters);
+                double lambda_product = lambda_L(i, j, k, m, parameters) * lambda_F(m, l, parameters);
+                xi_sum_m += xi_product;
                 lambda_xi_sum += lambda_product - xi_product * xi_product;
             }
-        }
-    }
-
-    // Calculate xi_product_sum
-    double xi_product_sum = 0.0;
-    for (size_t j = 0; j < max_j; ++j)
-    {
-        size_t max_k = parameters.Y[l][i][j].size();
-        for (size_t k = 0; k < max_k; ++k)
-        {
-            double xi_product_sum_for_m = 0.0;
-            for (size_t m = 0; m < max_m; ++m)
-            {
-                xi_product_sum_for_m += xi_L(i, j, k, m, parameters) * xi_F(m, l, parameters);
-            }
-            xi_product_sum += xi_product_sum_for_m * xi_product_sum_for_m;
+            Y_xi_sum += Y_ijk_l * xi_sum_m;
+            xi_product_sum += xi_sum_m * xi_sum_m;
         }
     }
 

@@ -127,9 +127,9 @@ CaviResult cavi(Parameters &parameters, int max_iterations, double relative_elbo
         {
             for (int i = 0; i < n_resolutions; ++i)
             {
-                for (std::size_t j = 0; j < Y[l][i].size(); ++j)
+                for (std::size_t j = 0; j < new_parameters.mu_L[l][i].size(); ++j)
                 {
-                    for (std::size_t k = 0; k < Y[l][i][j].size(); ++k)
+                    for (std::size_t k = 0; k < new_parameters.mu_L[l][i][j].size(); ++k)
                     {
                         UpdateLZLResult L_Z_L_update = compute_update_L_Z_L(i, j, k, l, new_parameters);
                         new_parameters.sigma_squared_L[l][i][j][k] = L_Z_L_update.sigma_squared_L;

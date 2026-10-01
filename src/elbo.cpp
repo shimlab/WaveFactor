@@ -8,30 +8,18 @@ double compute_E_log_likelihood_Y_ijk_l_given_pi_L_F_tau(int i, int j, int k, in
 
     int max_m = parameters.n_factors; // i.e. number of factors
 
-    double xi_product_sum = 0;
+    double xi_product_sum = 0.0;
+    double xi_product_sq_sum = 0.0;
+    double lambda_product_sum = 0.0;
     for (int m = 0; m < max_m; ++m)
     {
-        xi_product_sum += xi_L(i, j, k, m, parameters) * xi_F(m, l, parameters);
-    }
-
-    double xi_quad_product_sum = 0;
-    for (int a = 0; a < max_m; ++a)
-    {
-        for (int b = 0; b < max_m; ++b)
-        {
-            if (a != b)
-            {
-                xi_quad_product_sum += xi_L(i, j, k, a, parameters) * xi_F(a, l, parameters) *
-                                       xi_L(i, j, k, b, parameters) * xi_F(b, l, parameters);
-            }
-        }
-    }
-
-    double lambda_product_sum = 0;
-    for (int m = 0; m < max_m; ++m)
-    {
+        double x_m = xi_L(i, j, k, m, parameters) * xi_F(m, l, parameters);
+        xi_product_sum += x_m;
+        xi_product_sq_sum += x_m * x_m;
         lambda_product_sum += lambda_L(i, j, k, m, parameters) * lambda_F(m, l, parameters);
     }
+
+    double xi_quad_product_sum = xi_product_sum * xi_product_sum - xi_product_sq_sum;
 
     return 0.5 * (theta_tau_i_l - gamma_tau_i_l * (Y_ijk_l * Y_ijk_l - 2 * Y_ijk_l * xi_product_sum +
                                                    xi_quad_product_sum + lambda_product_sum));
