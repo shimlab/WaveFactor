@@ -1,4 +1,5 @@
 #include "updates.hpp"
+#include <limits>
 
 // Global constants
 const double RELATIVE_PMF_INCREMENT = 1e-10;
@@ -53,6 +54,63 @@ double compute_update_log_r_L(int i, int j, int k, int l, double update_sigma_sq
     double incremented_false_log_prob = sum_log(false_log_prob, LOG_RELATIVE_PMF_INCREMENT);
 
     return incremented_true_log_prob - sum_log(incremented_true_log_prob, incremented_false_log_prob);
+}
+
+LZLUpdateContext make_L_Z_L_update_context(int i, int l, const Parameters &parameters)
+{
+    LZLUpdateContext ctx_i_l;
+    ctx_i_l.update_sigma_squared_L = compute_update_sigma_squared_L(i, 0, 0, l, parameters);
+    ctx_i_l.log_scaling_factor = 0.5 * (std::log(2.0) + std::log(M_PI) + std::log(ctx_i_l.update_sigma_squared_L));
+    ctx_i_l.log_bernoulli_true = parameters.log_pi_L[i];
+    ctx_i_l.log_bernoulli_false = std::log(1.0 - std::exp(parameters.log_pi_L[i]));
+    ctx_i_l.theta_t_i_l = theta_t(i, l, parameters);
+
+    ctx_i_l.nu_L.assign(parameters.n_features, std::numeric_limits<double>::signaling_NaN());
+    for (int d = 0; d < parameters.n_features; ++d)
+    {
+        ctx_i_l.nu_L[d] = gamma_tau(i, d, parameters) * xi_F(l, d, parameters);
+    }
+
+    ctx_i_l.phi_L.assign(parameters.n_factors, std::numeric_limits<double>::signaling_NaN());
+    for (int m = 0; m < parameters.n_factors; ++m)
+    {
+        if (m == l)
+        {
+            ctx_i_l.phi_L[m] = 0.0;
+            continue;
+        }
+        double sum_m = 0.0;
+        for (int d = 0; d < parameters.n_features; ++d)
+        {
+            sum_m += ctx_i_l.nu_L[d] * xi_F(m, d, parameters);
+        }
+        ctx_i_l.phi_L[m] = sum_m;
+    }
+
+    return ctx_i_l;
+}
+
+UpdateLZLResult compute_update_L_Z_L(int i, int j, int k, int l, const LZLUpdateContext &ctx_i_l, const Parameters &parameters)
+{
+    double s_bar_F_ijk_l = s_bar_F(i, j, k, l, ctx_i_l, parameters);
+    double update_mu_L_ijk_l = s_bar_F_ijk_l * ctx_i_l.update_sigma_squared_L;
+
+    double relative_true_log_prob = ctx_i_l.log_bernoulli_true + ctx_i_l.log_scaling_factor +
+        0.5 * (ctx_i_l.theta_t_i_l + (update_mu_L_ijk_l * update_mu_L_ijk_l) / ctx_i_l.update_sigma_squared_L);
+    double relative_false_log_prob = ctx_i_l.log_bernoulli_false;
+
+    double true_log_prob = relative_true_log_prob - sum_log(relative_true_log_prob, relative_false_log_prob);
+    double false_log_prob = relative_false_log_prob - sum_log(relative_true_log_prob, relative_false_log_prob);
+
+    double incremented_true_log_prob = sum_log(true_log_prob, LOG_RELATIVE_PMF_INCREMENT);
+    double incremented_false_log_prob = sum_log(false_log_prob, LOG_RELATIVE_PMF_INCREMENT);
+
+    double update_log_r_L_ijk_l = incremented_true_log_prob - sum_log(incremented_true_log_prob, incremented_false_log_prob);
+
+    return {
+        ctx_i_l.update_sigma_squared_L,
+        update_mu_L_ijk_l,
+        update_log_r_L_ijk_l};
 }
 
 UpdateLZLResult compute_update_L_Z_L(int i, int j, int k, int l, const Parameters &parameters)
@@ -181,12 +239,12 @@ double compute_update_beta_hat_tau(int i, int l, const Parameters &parameters)
 
 UpdateTauResult compute_update_tau(int i, int l, const Parameters &parameters)
 {
-    double alpha_hat_tau = compute_update_alpha_hat_tau(i, l, parameters);
-    double beta_hat_tau = compute_update_beta_hat_tau(i, l, parameters);
+    double update_alpha_hat_tau_i_l = compute_update_alpha_hat_tau(i, l, parameters);
+    double update_beta_hat_tau_i_l = compute_update_beta_hat_tau(i, l, parameters);
 
     return {
-        alpha_hat_tau,
-        beta_hat_tau};
+        update_alpha_hat_tau_i_l,
+        update_beta_hat_tau_i_l};
 }
 
 double compute_update_alpha_hat_t(int i, int l, const Parameters &parameters)
@@ -222,10 +280,10 @@ double compute_update_beta_hat_t(int i, int l, const Parameters &parameters)
 
 UpdateTResult compute_update_t(int i, int l, const Parameters &parameters)
 {
-    double alpha_hat_t = compute_update_alpha_hat_t(i, l, parameters);
-    double beta_hat_t = compute_update_beta_hat_t(i, l, parameters);
+    double update_alpha_hat_t_i_l = compute_update_alpha_hat_t(i, l, parameters);
+    double update_beta_hat_t_i_l = compute_update_beta_hat_t(i, l, parameters);
 
     return {
-        alpha_hat_t,
-        beta_hat_t};
+        update_alpha_hat_t_i_l,
+        update_beta_hat_t_i_l};
 }

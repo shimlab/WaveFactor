@@ -1,5 +1,6 @@
 #include <gtest/gtest.h>
 #include "utilities.hpp"
+#include "updates.hpp"
 #include "mocks.hpp"
 #include <unsupported/Eigen/SpecialFunctions>
 #include <cmath>
@@ -74,6 +75,12 @@ TEST(UtilitiesTest, SF)
 TEST(UtilitiesTest, SBarF)
 {
     EXPECT_NEAR(s_bar_F(1, 1, 1, 1, mocks::parameters), mocks::s_bar_F_ijk_l, 0.001);
+}
+
+TEST(UtilitiesTest, SBarFWithContext)
+{
+    LZLUpdateContext ctx_i_l = make_L_Z_L_update_context(1, 1, mocks::parameters);
+    EXPECT_NEAR(s_bar_F(1, 1, 1, 1, ctx_i_l, mocks::parameters), mocks::s_bar_F_ijk_l, 0.001);
 }
 
 TEST(UtilitiesTest, UBarF)

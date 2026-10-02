@@ -127,15 +127,16 @@ CaviResult cavi(Parameters &parameters, int max_iterations, double relative_elbo
         {
             for (int i = 0; i < n_resolutions; ++i)
             {
+                LZLUpdateContext ctx_i_l = make_L_Z_L_update_context(i, l, new_parameters);
                 for (std::size_t j = 0; j < new_parameters.mu_L[l][i].size(); ++j)
                 {
                     for (std::size_t k = 0; k < new_parameters.mu_L[l][i][j].size(); ++k)
                     {
-                        UpdateLZLResult L_Z_L_update = compute_update_L_Z_L(i, j, k, l, new_parameters);
-                        new_parameters.sigma_squared_L[l][i][j][k] = L_Z_L_update.sigma_squared_L;
-                        new_parameters.mu_L[l][i][j][k] = L_Z_L_update.mu_L;
-                        new_parameters.log_r_L[l][i][j][k] = L_Z_L_update.log_r_L;
-                        new_parameters.r_L[l][i][j][k] = std::exp(L_Z_L_update.log_r_L);
+                        UpdateLZLResult update_L_Z_L_ijk_l = compute_update_L_Z_L(i, j, k, l, ctx_i_l, new_parameters);
+                        new_parameters.sigma_squared_L[l][i][j][k] = update_L_Z_L_ijk_l.update_sigma_squared_L;
+                        new_parameters.mu_L[l][i][j][k] = update_L_Z_L_ijk_l.update_mu_L;
+                        new_parameters.log_r_L[l][i][j][k] = update_L_Z_L_ijk_l.update_log_r_L;
+                        new_parameters.r_L[l][i][j][k] = std::exp(update_L_Z_L_ijk_l.update_log_r_L);
                     }
                 }
             }
@@ -146,11 +147,11 @@ CaviResult cavi(Parameters &parameters, int max_iterations, double relative_elbo
         {
             for (int j = 0; j < n_features; ++j)
             {
-                UpdateFZFResult F_Z_F_update = compute_update_F_Z_F(i, j, new_parameters);
-                new_parameters.sigma_squared_F[i][j] = F_Z_F_update.sigma_squared_F;
-                new_parameters.mu_F[i][j] = F_Z_F_update.mu_F;
-                new_parameters.log_r_F[i][j] = F_Z_F_update.log_r_F;
-                new_parameters.r_F[i][j] = std::exp(F_Z_F_update.log_r_F);
+                UpdateFZFResult update_F_Z_F_i_j = compute_update_F_Z_F(i, j, new_parameters);
+                new_parameters.sigma_squared_F[i][j] = update_F_Z_F_i_j.update_sigma_squared_F;
+                new_parameters.mu_F[i][j] = update_F_Z_F_i_j.update_mu_F;
+                new_parameters.log_r_F[i][j] = update_F_Z_F_i_j.update_log_r_F;
+                new_parameters.r_F[i][j] = std::exp(update_F_Z_F_i_j.update_log_r_F);
             }
         }
 
@@ -159,9 +160,9 @@ CaviResult cavi(Parameters &parameters, int max_iterations, double relative_elbo
         {
             for (int l = 0; l < n_features; ++l)
             {
-                UpdateTauResult tau_i_l_update = compute_update_tau(i, l, new_parameters);
-                new_parameters.alpha_hat_tau[i][l] = tau_i_l_update.alpha_hat_tau;
-                new_parameters.beta_hat_tau[i][l] = tau_i_l_update.beta_hat_tau;
+                UpdateTauResult update_tau_i_l = compute_update_tau(i, l, new_parameters);
+                new_parameters.alpha_hat_tau[i][l] = update_tau_i_l.update_alpha_hat_tau;
+                new_parameters.beta_hat_tau[i][l] = update_tau_i_l.update_beta_hat_tau;
             }
         }
 
@@ -170,9 +171,9 @@ CaviResult cavi(Parameters &parameters, int max_iterations, double relative_elbo
         {
             for (int l = 0; l < n_factors; ++l)
             {
-                UpdateTResult t_i_l_update = compute_update_t(i, l, new_parameters);
-                new_parameters.alpha_hat_t[i][l] = t_i_l_update.alpha_hat_t;
-                new_parameters.beta_hat_t[i][l] = t_i_l_update.beta_hat_t;
+                UpdateTResult update_t_i_l = compute_update_t(i, l, new_parameters);
+                new_parameters.alpha_hat_t[i][l] = update_t_i_l.update_alpha_hat_t;
+                new_parameters.beta_hat_t[i][l] = update_t_i_l.update_beta_hat_t;
             }
         }
 

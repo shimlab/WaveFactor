@@ -2,6 +2,7 @@
 #define UPDATES_HPP_INCLUDED
 
 #include <cmath>
+#include <vector>
 #include "utilities.hpp"
 #include "parameters.hpp"
 
@@ -14,38 +15,52 @@ extern const double EFFECTIVE_ONE;
 extern const double EFFECTIVE_LOG_ZERO;
 extern const double EFFECTIVE_LOG_ONE;
 
+// Context holding resolution- and factor-level invariants for L and Z_L updates
+struct LZLUpdateContext
+{
+    double update_sigma_squared_L;
+    double log_scaling_factor;
+    double log_bernoulli_true;
+    double log_bernoulli_false;
+    double theta_t_i_l;
+    std::vector<double> nu_L;
+    std::vector<double> phi_L;
+};
+
 // Parameter update grouping structs
 struct UpdateLZLResult
 {
-    double sigma_squared_L;
-    double mu_L;
-    double log_r_L;
+    double update_sigma_squared_L;
+    double update_mu_L;
+    double update_log_r_L;
 };
 
 struct UpdateFZFResult
 {
-    double sigma_squared_F;
-    double mu_F;
-    double log_r_F;
+    double update_sigma_squared_F;
+    double update_mu_F;
+    double update_log_r_F;
 };
 
 struct UpdateTauResult
 {
-    double alpha_hat_tau;
-    double beta_hat_tau;
+    double update_alpha_hat_tau;
+    double update_beta_hat_tau;
 };
 
 struct UpdateTResult
 {
-    double alpha_hat_t;
-    double beta_hat_t;
+    double update_alpha_hat_t;
+    double update_beta_hat_t;
 };
 
 // For L_ijk_l, Z_L_ijk_l related updates
+LZLUpdateContext make_L_Z_L_update_context(int i, int l, const Parameters &parameters);
 double compute_update_sigma_squared_L(int i, int j, int k, int l, const Parameters &parameters);
 double compute_update_mu_L(int i, int j, int k, int l, double update_sigma_squared_L_ijk_l, const Parameters &parameters);
 double compute_update_Z_L_log_relative_pmf(int i, int j, int k, int l, int z_L, double update_sigma_squared_L_ijk_l, double update_mu_L_ijk_l, const Parameters &parameters);
 double compute_update_log_r_L(int i, int j, int k, int l, double update_sigma_squared_L_ijk_l, double update_mu_L_ijk_l, const Parameters &parameters);
+UpdateLZLResult compute_update_L_Z_L(int i, int j, int k, int l, const LZLUpdateContext &ctx_i_l, const Parameters &parameters);
 UpdateLZLResult compute_update_L_Z_L(int i, int j, int k, int l, const Parameters &parameters);
 
 // For F_i_j, Z_F_i_j related updates

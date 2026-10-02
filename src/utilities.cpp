@@ -1,4 +1,5 @@
 #include "utilities.hpp"
+#include "updates.hpp"
 
 // Helper functions
 double sum_log(double log_a, double log_b)
@@ -92,7 +93,7 @@ double w_F(int i, int j, int k, int l, int d, const Parameters &parameters)
 {
     double xi_F_l_d = xi_F(l, d, parameters);
     int max_m = parameters.n_factors;
-    double xi_sum = 0;
+    double xi_sum = 0.0;
     for (int m = 0; m < max_m; ++m)
     {
         if (m != l)
@@ -113,20 +114,36 @@ double s_F(int i, int j, int k, int l, int d, const Parameters &parameters)
 
 double s_bar_F(int i, int j, int k, int l, const Parameters &parameters)
 {
-    int max_d = parameters.n_features;
-    double s_sum = 0;
-    for (int d = 0; d < max_d; ++d)
+    double s_sum = 0.0;
+    for (int d = 0; d < parameters.n_features; ++d)
     {
         s_sum += s_F(i, j, k, l, d, parameters);
     }
     return s_sum;
 }
 
+double s_bar_F(int i, int j, int k, int l, const LZLUpdateContext &ctx_i_l, const Parameters &parameters)
+{
+    double dot_Y = 0.0;
+    for (int d = 0; d < parameters.n_features; ++d)
+    {
+        dot_Y += ctx_i_l.nu_L[d] * parameters.Y[d][i][j][k];
+    }
+
+    double dot_phi = 0.0;
+    for (int m = 0; m < parameters.n_factors; ++m)
+    {
+        if (m == l) continue;
+        dot_phi += ctx_i_l.phi_L[m] * xi_L(i, j, k, m, parameters);
+    }
+
+    return dot_Y - dot_phi;
+}
+
 double u_bar_F(int i, int l, const Parameters &parameters)
 {
-    int max_d = parameters.n_features;
-    double u_sum = 0;
-    for (int d = 0; d < max_d; ++d)
+    double u_sum = 0.0;
+    for (int d = 0; d < parameters.n_features; ++d)
     {
         u_sum += u_F(i, l, d, parameters);
     }
