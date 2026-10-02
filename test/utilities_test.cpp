@@ -73,24 +73,10 @@ TEST(UtilitiesTest, UL)
     EXPECT_NEAR(u_L(1, 1, 1, 1, 1, mocks::parameters), mocks::u_L_abc_i_j, 0.001);
 }
 
-TEST(UtilitiesTest, VL)
+TEST(UtilitiesTest, SBarLWithContext)
 {
-    EXPECT_NEAR(v_L(1, 1, 1, 1, 1, mocks::parameters), mocks::v_L_abc_i_j, 0.001);
-}
-
-TEST(UtilitiesTest, WL)
-{
-    EXPECT_NEAR(w_L(1, 1, 1, 1, 1, mocks::parameters), mocks::w_L_abc_i_j, 0.001);
-}
-
-TEST(UtilitiesTest, SL)
-{
-    EXPECT_NEAR(s_L(1, 1, 1, 1, 1, mocks::parameters), mocks::s_L_abc_i_j, 0.001);
-}
-
-TEST(UtilitiesTest, SBarL)
-{
-    EXPECT_NEAR(s_bar_L(1, 1, mocks::parameters), mocks::s_bar_L_i_j, 0.001);
+    FZFUpdateContext ctx_i = make_F_Z_F_update_context(1, mocks::parameters);
+    EXPECT_NEAR(s_bar_L(1, 1, ctx_i, mocks::parameters), mocks::s_bar_L_i_j, 0.001);
 }
 
 TEST(UtilitiesTest, UBarL)

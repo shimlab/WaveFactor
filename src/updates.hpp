@@ -27,6 +27,13 @@ struct LZLUpdateContext
     std::vector<double> phi_L;
 };
 
+// Context holding factor-level invariants for s_bar_L in F and Z_F updates
+struct FZFUpdateContext
+{
+    std::vector<std::vector<double>> nu_F;
+    std::vector<std::vector<double>> phi_F;
+};
+
 // Parameter update grouping structs
 struct UpdateLZLResult
 {
@@ -60,11 +67,9 @@ double compute_update_sigma_squared_L(int i, int j, int k, int l, const Paramete
 UpdateLZLResult compute_update_L_Z_L(int i, int j, int k, int l, const LZLUpdateContext &ctx_i_l, const Parameters &parameters);
 
 // For F_i_j, Z_F_i_j related updates
+FZFUpdateContext make_F_Z_F_update_context(int i, const Parameters &parameters);
 double compute_update_sigma_squared_F(int i, int j, const Parameters &parameters);
-double compute_update_mu_F(int i, int j, double update_sigma_squared_F_i_j, const Parameters &parameters);
-double compute_update_Z_F_log_relative_pmf(int i, int j, int z_F, double update_sigma_squared_F_i_j, double update_mu_F_i_j, const Parameters &parameters);
-double compute_update_log_r_F(int i, int j, double update_sigma_squared_F_i_j, double update_mu_F_i_j, const Parameters &parameters);
-UpdateFZFResult compute_update_F_Z_F(int i, int j, const Parameters &parameters);
+UpdateFZFResult compute_update_F_Z_F(int i, int j, const FZFUpdateContext &ctx_i, const Parameters &parameters);
 
 // For tau_i_l related updates
 double compute_update_alpha_hat_tau(int i, int l, const Parameters &parameters);

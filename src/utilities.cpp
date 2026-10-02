@@ -118,58 +118,24 @@ double u_L(int a, int b, int c, int i, int j, const Parameters &parameters)
     return lambda_L_abc_i * gamma_tau_a_j;
 }
 
-double v_L(int a, int b, int c, int i, int j, const Parameters &parameters)
+double s_bar_L(int i, int j, const FZFUpdateContext &ctx_i, const Parameters &parameters)
 {
-    double Y_abc_j = parameters.Y[j][a][b][c];
-    double xi_L_abc_i = xi_L(a, b, c, i, parameters);
-    double gamma_tau_a_j = gamma_tau(a, j, parameters);
-    return Y_abc_j * xi_L_abc_i * gamma_tau_a_j;
-}
-
-double w_L(int a, int b, int c, int i, int j, const Parameters &parameters)
-{
-    double xi_L_abc_i = xi_L(a, b, c, i, parameters);
-    int max_m = parameters.n_factors;
-    double xi_sum = 0;
-    for (int m = 0; m < max_m; ++m)
-    {
-        if (m != i)
-        {
-            xi_sum += xi_L(a, b, c, m, parameters) * xi_F(m, j, parameters);
-        }
-    }
-    double gamma_tau_a_j = gamma_tau(a, j, parameters);
-    return xi_L_abc_i * xi_sum * gamma_tau_a_j;
-}
-
-double s_L(int a, int b, int c, int i, int j, const Parameters &parameters)
-{
-    double v_L_abc_i_j = v_L(a, b, c, i, j, parameters);
-    double w_L_abc_i_j = w_L(a, b, c, i, j, parameters);
-    return v_L_abc_i_j - w_L_abc_i_j;
-}
-
-double s_bar_L(int i, int j, const Parameters &parameters)
-{
-    double s_sum = 0;
+    double s_sum = 0.0;
     for (int a = 0; a < parameters.n_resolutions; ++a)
     {
-        int max_b = parameters.mu_L[0][a].size();
-        for (int b = 0; b < max_b; ++b)
+        double dot_phi = 0.0;
+        for (int m = 0; m < parameters.n_factors; ++m)
         {
-            int max_c = parameters.mu_L[0][a][b].size();
-            for (int c = 0; c < max_c; ++c)
-            {
-                s_sum += s_L(a, b, c, i, j, parameters);
-            }
+            dot_phi += ctx_i.phi_F[a][m] * xi_F(m, j, parameters);
         }
+        s_sum += gamma_tau(a, j, parameters) * (ctx_i.nu_F[a][j] - dot_phi);
     }
     return s_sum;
 }
 
 double u_bar_L(int i, int j, const Parameters &parameters)
 {
-    double u_sum = 0;
+    double u_sum = 0.0;
     for (int a = 0; a < parameters.n_resolutions; ++a)
     {
         int max_b = parameters.mu_L[0][a].size();

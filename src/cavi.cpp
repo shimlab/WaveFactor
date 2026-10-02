@@ -145,9 +145,10 @@ CaviResult cavi(Parameters &parameters, int max_iterations, double relative_elbo
         // For F_i_j, Z_F_i_j related updates
         for (int i = 0; i < n_factors; ++i)
         {
+            FZFUpdateContext ctx_i = make_F_Z_F_update_context(i, new_parameters);
             for (int j = 0; j < n_features; ++j)
             {
-                UpdateFZFResult update_F_Z_F_i_j = compute_update_F_Z_F(i, j, new_parameters);
+                UpdateFZFResult update_F_Z_F_i_j = compute_update_F_Z_F(i, j, ctx_i, new_parameters);
                 new_parameters.sigma_squared_F[i][j] = update_F_Z_F_i_j.update_sigma_squared_F;
                 new_parameters.mu_F[i][j] = update_F_Z_F_i_j.update_mu_F;
                 new_parameters.log_r_F[i][j] = update_F_Z_F_i_j.update_log_r_F;

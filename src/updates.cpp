@@ -79,61 +79,91 @@ UpdateLZLResult compute_update_L_Z_L(int i, int j, int k, int l, const LZLUpdate
 
 
 // For F_i_j, Z_F_i_j related updates
+FZFUpdateContext make_F_Z_F_update_context(int i, const Parameters &parameters)
+{
+    FZFUpdateContext ctx_i;
+
+    // 1. Spatial wavelet data projection nu_F[a][g] = sum_{b, c} xi_L(a, b, c, i) * Y[g][a][b][c]
+    ctx_i.nu_F.assign(parameters.n_resolutions, std::vector<double>(parameters.n_features, std::numeric_limits<double>::signaling_NaN()));
+    for (int a = 0; a < parameters.n_resolutions; ++a)
+    {
+        for (int g = 0; g < parameters.n_features; ++g)
+        {
+            double sum_xi_Y = 0.0;
+            for (std::size_t b = 0; b < parameters.mu_L[i][a].size(); ++b)
+            {
+                for (std::size_t c = 0; c < parameters.mu_L[i][a][b].size(); ++c)
+                {
+                    sum_xi_Y += xi_L(a, b, c, i, parameters) * parameters.Y[g][a][b][c];
+                }
+            }
+            ctx_i.nu_F[a][g] = sum_xi_Y;
+        }
+    }
+
+    // 2. Spatial factor Gram matrix phi_F[a][m] = sum_{b, c} xi_L(a, b, c, i) * xi_L(a, b, c, m)
+    ctx_i.phi_F.assign(parameters.n_resolutions, std::vector<double>(parameters.n_factors, std::numeric_limits<double>::signaling_NaN()));
+    for (int a = 0; a < parameters.n_resolutions; ++a)
+    {
+        for (int m = 0; m < parameters.n_factors; ++m)
+        {
+            if (m == i)
+            {
+                ctx_i.phi_F[a][m] = 0.0;
+                continue;
+            }
+            double sum_xi_cross = 0.0;
+            for (std::size_t b = 0; b < parameters.mu_L[i][a].size(); ++b)
+            {
+                for (std::size_t c = 0; c < parameters.mu_L[i][a][b].size(); ++c)
+                {
+                    sum_xi_cross += xi_L(a, b, c, i, parameters) * xi_L(a, b, c, m, parameters);
+                }
+            }
+            ctx_i.phi_F[a][m] = sum_xi_cross;
+        }
+    }
+
+    return ctx_i;
+}
+
 double compute_update_sigma_squared_F(int i, int j, const Parameters &parameters)
 {
     double u_bar_L_i_j = u_bar_L(i, j, parameters);
     return 1.0 / (1 + u_bar_L_i_j);
 }
 
-double compute_update_mu_F(int i, int j, double update_sigma_squared_F_i_j, const Parameters &parameters)
-{
-    double s_bar_L_i_j = s_bar_L(i, j, parameters);
-    return s_bar_L_i_j * update_sigma_squared_F_i_j;
-}
-
-double compute_update_Z_F_log_relative_pmf(int i, int j, int z_F, double update_sigma_squared_F_i_j, double update_mu_F_i_j, const Parameters &parameters)
-{
-    double log_pi_F_i_j = parameters.log_pi_F[i][j];
-    double pi_F_i_j = exp(log_pi_F_i_j);
-
-    double log_scaling_factor = 0;
-    double log_exp_factor = 0;
-    double log_bernoulli_factor = (z_F == 1) ? log_pi_F_i_j : log(1 - pi_F_i_j);
-    if (z_F == 1)
-    {
-        log_scaling_factor = 0.5 * (log(2) + log(M_PI) + log(update_sigma_squared_F_i_j));
-        log_exp_factor = 0.5 * (-log(2 * M_PI) + update_mu_F_i_j * update_mu_F_i_j / update_sigma_squared_F_i_j);
-    }
-
-    return log_scaling_factor + log_exp_factor + log_bernoulli_factor;
-}
-
-double compute_update_log_r_F(int i, int j, double update_sigma_squared_F_i_j, double update_mu_F_i_j, const Parameters &parameters)
-{
-    double relative_true_log_prob = compute_update_Z_F_log_relative_pmf(i, j, 1, update_sigma_squared_F_i_j, update_mu_F_i_j, parameters);
-    double relative_false_log_prob = compute_update_Z_F_log_relative_pmf(i, j, 0, update_sigma_squared_F_i_j, update_mu_F_i_j, parameters);
-
-    double true_log_prob = relative_true_log_prob - sum_log(relative_true_log_prob, relative_false_log_prob);
-    double false_log_prob = relative_false_log_prob - sum_log(relative_true_log_prob, relative_false_log_prob);
-
-    double incremented_true_log_prob = sum_log(true_log_prob, LOG_RELATIVE_PMF_INCREMENT);
-    double incremented_false_log_prob = sum_log(false_log_prob, LOG_RELATIVE_PMF_INCREMENT);
-
-    return incremented_true_log_prob - sum_log(incremented_true_log_prob, incremented_false_log_prob);
-}
-
-UpdateFZFResult compute_update_F_Z_F(int i, int j, const Parameters &parameters)
+UpdateFZFResult compute_update_F_Z_F(int i, int j, const FZFUpdateContext &ctx_i, const Parameters &parameters)
 {
     double update_sigma_squared_F_i_j = compute_update_sigma_squared_F(i, j, parameters);
-    double update_mu_F_i_j = compute_update_mu_F(i, j, update_sigma_squared_F_i_j, parameters);
+    double s_bar_L_i_j = s_bar_L(i, j, ctx_i, parameters);
+    double update_mu_F_i_j = s_bar_L_i_j * update_sigma_squared_F_i_j;
+
     double log_pi_F_i_j = parameters.log_pi_F[i][j];
     double update_log_r_F_i_j;
-    if (log_pi_F_i_j < EFFECTIVE_LOG_ZERO) {
-      update_log_r_F_i_j = EFFECTIVE_LOG_ZERO;
-    } else if (log_pi_F_i_j > EFFECTIVE_LOG_ONE) {
-      update_log_r_F_i_j = EFFECTIVE_LOG_ONE;
-    } else {
-      update_log_r_F_i_j = compute_update_log_r_F(i, j, update_sigma_squared_F_i_j, update_mu_F_i_j, parameters);
+    if (log_pi_F_i_j < EFFECTIVE_LOG_ZERO)
+    {
+        update_log_r_F_i_j = EFFECTIVE_LOG_ZERO;
+    }
+    else if (log_pi_F_i_j > EFFECTIVE_LOG_ONE)
+    {
+        update_log_r_F_i_j = EFFECTIVE_LOG_ONE;
+    }
+    else
+    {
+        double pi_F_i_j = std::exp(log_pi_F_i_j);
+        double log_scaling_factor = 0.5 * (std::log(2.0) + std::log(M_PI) + std::log(update_sigma_squared_F_i_j));
+        double log_exp_factor = 0.5 * (-std::log(2.0 * M_PI) + update_mu_F_i_j * update_mu_F_i_j / update_sigma_squared_F_i_j);
+        double relative_true_log_prob = log_scaling_factor + log_exp_factor + log_pi_F_i_j;
+        double relative_false_log_prob = std::log(1.0 - pi_F_i_j);
+
+        double true_log_prob = relative_true_log_prob - sum_log(relative_true_log_prob, relative_false_log_prob);
+        double false_log_prob = relative_false_log_prob - sum_log(relative_true_log_prob, relative_false_log_prob);
+
+        double incremented_true_log_prob = sum_log(true_log_prob, LOG_RELATIVE_PMF_INCREMENT);
+        double incremented_false_log_prob = sum_log(false_log_prob, LOG_RELATIVE_PMF_INCREMENT);
+
+        update_log_r_F_i_j = incremented_true_log_prob - sum_log(incremented_true_log_prob, incremented_false_log_prob);
     }
 
     return {

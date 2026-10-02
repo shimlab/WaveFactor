@@ -36,30 +36,37 @@ TEST(CaviUpdatesTest, ComputeUpdateLZL)
     EXPECT_NEAR(update_L_Z_L.update_log_r_L, mocks::update_log_r_L_ijk_l, 0.001);
 }
 
+TEST(CaviUpdatesTest, MakeFZFUpdateContext)
+{
+    FZFUpdateContext ctx_i = make_F_Z_F_update_context(1, mocks::parameters);
+    EXPECT_EQ(ctx_i.nu_F.size(), static_cast<std::size_t>(mocks::parameters.n_resolutions));
+    EXPECT_EQ(ctx_i.phi_F.size(), static_cast<std::size_t>(mocks::parameters.n_resolutions));
+    for (int a = 0; a < mocks::parameters.n_resolutions; ++a)
+    {
+        EXPECT_EQ(ctx_i.nu_F[a].size(), static_cast<std::size_t>(mocks::parameters.n_features));
+        EXPECT_EQ(ctx_i.phi_F[a].size(), static_cast<std::size_t>(mocks::parameters.n_factors));
+        // Verify explicit self-interaction zeroing and no remaining NaNs
+        EXPECT_EQ(ctx_i.phi_F[a][1], 0.0);
+        for (int m = 0; m < mocks::parameters.n_factors; ++m)
+        {
+            EXPECT_FALSE(std::isnan(ctx_i.phi_F[a][m]));
+        }
+        for (int g = 0; g < mocks::parameters.n_features; ++g)
+        {
+            EXPECT_FALSE(std::isnan(ctx_i.nu_F[a][g]));
+        }
+    }
+}
+
 TEST(CaviUpdatesTest, ComputeUpdateSigmaSquaredF)
 {
     EXPECT_NEAR(compute_update_sigma_squared_F(1, 1, mocks::parameters), mocks::update_sigma_squared_F_i_j, 0.001);
 }
 
-TEST(CaviUpdatesTest, ComputeUpdateMuF)
-{
-    EXPECT_NEAR(compute_update_mu_F(1, 1, mocks::update_sigma_squared_F_i_j, mocks::parameters), mocks::update_mu_F_i_j, 0.001);
-}
-
-TEST(CaviUpdatesTest, ComputeUpdateZFRelativePmf)
-{
-    EXPECT_NEAR(compute_update_Z_F_log_relative_pmf(1, 1, 0, mocks::update_sigma_squared_F_i_j, mocks::update_mu_F_i_j, mocks::parameters), mocks::update_Z_F_log_relative_pmf_0, 0.001);
-    EXPECT_NEAR(compute_update_Z_F_log_relative_pmf(1, 1, 1, mocks::update_sigma_squared_F_i_j, mocks::update_mu_F_i_j, mocks::parameters), mocks::update_Z_F_log_relative_pmf_1, 0.001);
-}
-
-TEST(CaviUpdatesTest, ComputeUpdateLogRF)
-{
-    EXPECT_NEAR(compute_update_log_r_F(1, 1, mocks::update_sigma_squared_F_i_j, mocks::update_mu_F_i_j, mocks::parameters), mocks::update_log_r_F_i_j, 0.001);
-}
-
 TEST(CaviUpdatesTest, ComputeUpdateFZF)
 {
-    auto update_F_Z_F = compute_update_F_Z_F(1, 1, mocks::parameters);
+    FZFUpdateContext ctx_i = make_F_Z_F_update_context(1, mocks::parameters);
+    auto update_F_Z_F = compute_update_F_Z_F(1, 1, ctx_i, mocks::parameters);
     EXPECT_NEAR(update_F_Z_F.update_sigma_squared_F, mocks::update_sigma_squared_F_i_j, 0.001);
     EXPECT_NEAR(update_F_Z_F.update_mu_F, mocks::update_mu_F_i_j, 0.001);
     EXPECT_NEAR(update_F_Z_F.update_log_r_F, mocks::update_log_r_F_i_j, 0.001);
