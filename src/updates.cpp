@@ -18,43 +18,7 @@ double compute_update_sigma_squared_L(int i, int j, int k, int l, const Paramete
     return 1.0 / (gamma_t_i_l + u_bar_F_i_l);
 }
 
-double compute_update_mu_L(int i, int j, int k, int l, double update_sigma_squared_L_ijk_l, const Parameters &parameters)
-{
-    double s_bar_F_ijk_l = s_bar_F(i, j, k, l, parameters);
-    return s_bar_F_ijk_l * update_sigma_squared_L_ijk_l;
-}
 
-double compute_update_Z_L_log_relative_pmf(int i, int j, int k, int l, int z_L, double update_sigma_squared_L_ijk_l, double update_mu_L_ijk_l, const Parameters &parameters)
-{
-    double log_pi_L_i = parameters.log_pi_L[i];
-    double pi_L_i = exp(log_pi_L_i);
-
-    double log_scaling_factor = 0;
-    double log_exp_factor = 0;
-    double log_bernoulli_factor = (z_L == 1) ? log_pi_L_i : log(1 - pi_L_i);
-    if (z_L == 1)
-    {
-        double theta_t_i_l = theta_t(i, l, parameters);
-        log_scaling_factor = 0.5 * (log(2) + log(M_PI) + log(update_sigma_squared_L_ijk_l));
-        log_exp_factor = 0.5 * (theta_t_i_l + update_mu_L_ijk_l * update_mu_L_ijk_l / update_sigma_squared_L_ijk_l);
-    }
-
-    return log_scaling_factor + log_exp_factor + log_bernoulli_factor;
-}
-
-double compute_update_log_r_L(int i, int j, int k, int l, double update_sigma_squared_L_ijk_l, double update_mu_L_ijk_l, const Parameters &parameters)
-{
-    double relative_true_log_prob = compute_update_Z_L_log_relative_pmf(i, j, k, l, 1, update_sigma_squared_L_ijk_l, update_mu_L_ijk_l, parameters);
-    double relative_false_log_prob = compute_update_Z_L_log_relative_pmf(i, j, k, l, 0, update_sigma_squared_L_ijk_l, update_mu_L_ijk_l, parameters);
-
-    double true_log_prob = relative_true_log_prob - sum_log(relative_true_log_prob, relative_false_log_prob);
-    double false_log_prob = relative_false_log_prob - sum_log(relative_true_log_prob, relative_false_log_prob);
-
-    double incremented_true_log_prob = sum_log(true_log_prob, LOG_RELATIVE_PMF_INCREMENT);
-    double incremented_false_log_prob = sum_log(false_log_prob, LOG_RELATIVE_PMF_INCREMENT);
-
-    return incremented_true_log_prob - sum_log(incremented_true_log_prob, incremented_false_log_prob);
-}
 
 LZLUpdateContext make_L_Z_L_update_context(int i, int l, const Parameters &parameters)
 {
@@ -113,17 +77,6 @@ UpdateLZLResult compute_update_L_Z_L(int i, int j, int k, int l, const LZLUpdate
         update_log_r_L_ijk_l};
 }
 
-UpdateLZLResult compute_update_L_Z_L(int i, int j, int k, int l, const Parameters &parameters)
-{
-    double update_sigma_squared_L_ijk_l = compute_update_sigma_squared_L(i, j, k, l, parameters);
-    double update_mu_L_ijk_l = compute_update_mu_L(i, j, k, l, update_sigma_squared_L_ijk_l, parameters);
-    double update_log_r_L_ijk_l = compute_update_log_r_L(i, j, k, l, update_sigma_squared_L_ijk_l, update_mu_L_ijk_l, parameters);
-
-    return {
-        update_sigma_squared_L_ijk_l,
-        update_mu_L_ijk_l,
-        update_log_r_L_ijk_l};
-}
 
 // For F_i_j, Z_F_i_j related updates
 double compute_update_sigma_squared_F(int i, int j, const Parameters &parameters)

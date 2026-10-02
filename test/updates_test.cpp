@@ -8,30 +8,6 @@ TEST(CaviUpdatesTest, ComputeUpdateSigmaSquaredL)
     EXPECT_NEAR(compute_update_sigma_squared_L(1, 1, 1, 1, mocks::parameters), mocks::update_sigma_squared_L_ijk_l, 0.001);
 }
 
-TEST(CaviUpdatesTest, ComputeUpdateMuL)
-{
-    EXPECT_NEAR(compute_update_mu_L(1, 1, 1, 1, mocks::update_sigma_squared_L_ijk_l, mocks::parameters), mocks::update_mu_L_ijk_l, 0.001);
-}
-
-TEST(CaviUpdatesTest, ComputeUpdateZLRelativePmf)
-{
-    EXPECT_NEAR(compute_update_Z_L_log_relative_pmf(1, 1, 1, 1, 0, mocks::update_sigma_squared_L_ijk_l, mocks::update_mu_L_ijk_l, mocks::parameters), mocks::update_Z_L_log_relative_pmf_0, 0.001);
-    EXPECT_NEAR(compute_update_Z_L_log_relative_pmf(1, 1, 1, 1, 1, mocks::update_sigma_squared_L_ijk_l, mocks::update_mu_L_ijk_l, mocks::parameters), mocks::update_Z_L_log_relative_pmf_1, 0.001);
-}
-
-TEST(CaviUpdatesTest, ComputeUpdateLogRL)
-{
-    EXPECT_NEAR(compute_update_log_r_L(1, 1, 1, 1, mocks::update_sigma_squared_L_ijk_l, mocks::update_mu_L_ijk_l, mocks::parameters), mocks::update_log_r_L_ijk_l, 0.001);
-}
-
-TEST(CaviUpdatesTest, ComputeUpdateLZL)
-{
-    auto update_L_Z_L = compute_update_L_Z_L(1, 1, 1, 1, mocks::parameters);
-    EXPECT_NEAR(update_L_Z_L.update_sigma_squared_L, mocks::update_sigma_squared_L_ijk_l, 0.001);
-    EXPECT_NEAR(update_L_Z_L.update_mu_L, mocks::update_mu_L_ijk_l, 0.001);
-    EXPECT_NEAR(update_L_Z_L.update_log_r_L, mocks::update_log_r_L_ijk_l, 0.001);
-}
-
 TEST(CaviUpdatesTest, MakeLZLUpdateContext)
 {
     LZLUpdateContext ctx_i_l = make_L_Z_L_update_context(1, 1, mocks::parameters);
@@ -51,7 +27,7 @@ TEST(CaviUpdatesTest, MakeLZLUpdateContext)
     }
 }
 
-TEST(CaviUpdatesTest, ComputeUpdateLZLWithContext)
+TEST(CaviUpdatesTest, ComputeUpdateLZL)
 {
     LZLUpdateContext ctx_i_l = make_L_Z_L_update_context(1, 1, mocks::parameters);
     auto update_L_Z_L = compute_update_L_Z_L(1, 1, 1, 1, ctx_i_l, mocks::parameters);

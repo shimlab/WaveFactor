@@ -81,46 +81,7 @@ double u_F(int i, int l, int d, const Parameters &parameters)
     return lambda_F_l_d * gamma_tau_i_d;
 }
 
-double v_F(int i, int j, int k, int l, int d, const Parameters &parameters)
-{
-    double Y_ijk_d = parameters.Y[d][i][j][k];
-    double xi_F_l_d = xi_F(l, d, parameters);
-    double gamma_tau_i_d = gamma_tau(i, d, parameters);
-    return Y_ijk_d * xi_F_l_d * gamma_tau_i_d;
-}
 
-double w_F(int i, int j, int k, int l, int d, const Parameters &parameters)
-{
-    double xi_F_l_d = xi_F(l, d, parameters);
-    int max_m = parameters.n_factors;
-    double xi_sum = 0.0;
-    for (int m = 0; m < max_m; ++m)
-    {
-        if (m != l)
-        {
-            xi_sum += xi_L(i, j, k, m, parameters) * xi_F(m, d, parameters);
-        }
-    }
-    double gamma_tau_i_d = gamma_tau(i, d, parameters);
-    return xi_F_l_d * xi_sum * gamma_tau_i_d;
-}
-
-double s_F(int i, int j, int k, int l, int d, const Parameters &parameters)
-{
-    double v_F_ijk_l_d = v_F(i, j, k, l, d, parameters);
-    double w_F_ijk_l_d = w_F(i, j, k, l, d, parameters);
-    return v_F_ijk_l_d - w_F_ijk_l_d;
-}
-
-double s_bar_F(int i, int j, int k, int l, const Parameters &parameters)
-{
-    double s_sum = 0.0;
-    for (int d = 0; d < parameters.n_features; ++d)
-    {
-        s_sum += s_F(i, j, k, l, d, parameters);
-    }
-    return s_sum;
-}
 
 double s_bar_F(int i, int j, int k, int l, const LZLUpdateContext &ctx_i_l, const Parameters &parameters)
 {

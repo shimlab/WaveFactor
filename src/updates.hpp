@@ -57,11 +57,7 @@ struct UpdateTResult
 // For L_ijk_l, Z_L_ijk_l related updates
 LZLUpdateContext make_L_Z_L_update_context(int i, int l, const Parameters &parameters);
 double compute_update_sigma_squared_L(int i, int j, int k, int l, const Parameters &parameters);
-double compute_update_mu_L(int i, int j, int k, int l, double update_sigma_squared_L_ijk_l, const Parameters &parameters);
-double compute_update_Z_L_log_relative_pmf(int i, int j, int k, int l, int z_L, double update_sigma_squared_L_ijk_l, double update_mu_L_ijk_l, const Parameters &parameters);
-double compute_update_log_r_L(int i, int j, int k, int l, double update_sigma_squared_L_ijk_l, double update_mu_L_ijk_l, const Parameters &parameters);
 UpdateLZLResult compute_update_L_Z_L(int i, int j, int k, int l, const LZLUpdateContext &ctx_i_l, const Parameters &parameters);
-UpdateLZLResult compute_update_L_Z_L(int i, int j, int k, int l, const Parameters &parameters);
 
 // For F_i_j, Z_F_i_j related updates
 double compute_update_sigma_squared_F(int i, int j, const Parameters &parameters);
