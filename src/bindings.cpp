@@ -35,13 +35,16 @@ PYBIND11_MODULE(WaveFactor, m)
         .def_readwrite("mu_L", &Parameters::mu_L)
         .def_readwrite("sigma_squared_L", &Parameters::sigma_squared_L)
         .def_readwrite("log_r_L", &Parameters::log_r_L)
+        .def_readwrite("r_L", &Parameters::r_L)
         .def_readwrite("mu_F", &Parameters::mu_F)
         .def_readwrite("sigma_squared_F", &Parameters::sigma_squared_F)
         .def_readwrite("log_r_F", &Parameters::log_r_F)
+        .def_readwrite("r_F", &Parameters::r_F)
         .def_readwrite("alpha_hat_t", &Parameters::alpha_hat_t)
         .def_readwrite("beta_hat_t", &Parameters::beta_hat_t)
         .def_readwrite("alpha_hat_tau", &Parameters::alpha_hat_tau)
-        .def_readwrite("beta_hat_tau", &Parameters::beta_hat_tau);
+        .def_readwrite("beta_hat_tau", &Parameters::beta_hat_tau)
+        .def_readwrite("N_coefs_per_res", &Parameters::N_coefs_per_res);
 
     py::class_<CaviResult>(m, "CaviResult")
         .def(py::init<Parameters, std::vector<double>, double>())

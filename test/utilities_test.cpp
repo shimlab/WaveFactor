@@ -1,5 +1,6 @@
 #include <gtest/gtest.h>
 #include "utilities.hpp"
+#include "updates.hpp"
 #include "mocks.hpp"
 #include <unsupported/Eigen/SpecialFunctions>
 #include <cmath>
@@ -56,24 +57,10 @@ TEST(UtilitiesTest, UF)
     EXPECT_NEAR(u_F(1, 1, 1, mocks::parameters), mocks::u_F_i_l_d, 0.001);
 }
 
-TEST(UtilitiesTest, VF)
+TEST(UtilitiesTest, SBarFWithContext)
 {
-    EXPECT_NEAR(v_F(1, 1, 1, 1, 1, mocks::parameters), mocks::v_F_ijk_l_d, 0.001);
-}
-
-TEST(UtilitiesTest, WF)
-{
-    EXPECT_NEAR(w_F(1, 1, 1, 1, 1, mocks::parameters), mocks::w_F_ijk_l_d, 0.001);
-}
-
-TEST(UtilitiesTest, SF)
-{
-    EXPECT_NEAR(s_F(1, 1, 1, 1, 1, mocks::parameters), mocks::s_F_ijk_l_d, 0.001);
-}
-
-TEST(UtilitiesTest, SBarF)
-{
-    EXPECT_NEAR(s_bar_F(1, 1, 1, 1, mocks::parameters), mocks::s_bar_F_ijk_l, 0.001);
+    LZLUpdateContext ctx_i_l = make_L_Z_L_update_context(1, 1, mocks::parameters);
+    EXPECT_NEAR(s_bar_F(1, 1, 1, 1, ctx_i_l, mocks::parameters), mocks::s_bar_F_ijk_l, 0.001);
 }
 
 TEST(UtilitiesTest, UBarF)
@@ -86,24 +73,10 @@ TEST(UtilitiesTest, UL)
     EXPECT_NEAR(u_L(1, 1, 1, 1, 1, mocks::parameters), mocks::u_L_abc_i_j, 0.001);
 }
 
-TEST(UtilitiesTest, VL)
+TEST(UtilitiesTest, SBarLWithContext)
 {
-    EXPECT_NEAR(v_L(1, 1, 1, 1, 1, mocks::parameters), mocks::v_L_abc_i_j, 0.001);
-}
-
-TEST(UtilitiesTest, WL)
-{
-    EXPECT_NEAR(w_L(1, 1, 1, 1, 1, mocks::parameters), mocks::w_L_abc_i_j, 0.001);
-}
-
-TEST(UtilitiesTest, SL)
-{
-    EXPECT_NEAR(s_L(1, 1, 1, 1, 1, mocks::parameters), mocks::s_L_abc_i_j, 0.001);
-}
-
-TEST(UtilitiesTest, SBarL)
-{
-    EXPECT_NEAR(s_bar_L(1, 1, mocks::parameters), mocks::s_bar_L_i_j, 0.001);
+    FZFUpdateContext ctx_i = make_F_Z_F_update_context(1, mocks::parameters);
+    EXPECT_NEAR(s_bar_L(1, 1, ctx_i, mocks::parameters), mocks::s_bar_L_i_j, 0.001);
 }
 
 TEST(UtilitiesTest, UBarL)

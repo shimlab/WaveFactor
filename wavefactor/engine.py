@@ -194,13 +194,16 @@ def extract_cpp_parameters_to_dict(cpp_params: Any) -> Dict[str, Any]:
         "mu_L": cpp_params.mu_L,
         "sigma_squared_L": cpp_params.sigma_squared_L,
         "log_r_L": cpp_params.log_r_L,
+        "r_L": cpp_params.r_L,
         "mu_F": np.asarray(cpp_params.mu_F, dtype=np.float64),
         "sigma_squared_F": np.asarray(cpp_params.sigma_squared_F, dtype=np.float64),
         "log_r_F": np.asarray(cpp_params.log_r_F, dtype=np.float64),
+        "r_F": np.asarray(cpp_params.r_F, dtype=np.float64),
         "alpha_hat_t": np.asarray(cpp_params.alpha_hat_t, dtype=np.float64),
         "beta_hat_t": np.asarray(cpp_params.beta_hat_t, dtype=np.float64),
         "alpha_hat_tau": np.asarray(cpp_params.alpha_hat_tau, dtype=np.float64),
         "beta_hat_tau": np.asarray(cpp_params.beta_hat_tau, dtype=np.float64),
+        "N_coefs_per_res": np.asarray(cpp_params.N_coefs_per_res, dtype=np.float64),
     }
 
 

@@ -19,13 +19,16 @@ public:
     Tensor4D mu_L;
     Tensor4D sigma_squared_L;
     Tensor4D log_r_L;
+    Tensor4D r_L;
     Tensor2D mu_F;
     Tensor2D sigma_squared_F;
     Tensor2D log_r_F;
+    Tensor2D r_F;
     Tensor2D alpha_hat_t;
     Tensor2D beta_hat_t;
     Tensor2D alpha_hat_tau;
     Tensor2D beta_hat_tau;
+    Tensor1D N_coefs_per_res;
 
     // Constructor to initialize all fields based on provided values
     Parameters(int n_resolutions_init, int n_factors_init, int n_features_init,
