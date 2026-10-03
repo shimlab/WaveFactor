@@ -117,6 +117,25 @@ CaviResult cavi(Parameters &parameters, int max_iterations, double relative_elbo
     int n_features = parameters.n_features;
     int n_resolutions = parameters.n_resolutions;
 
+    // Precompute static Y squared sum per resolution and feature
+    std::vector<std::vector<double>> sum_Y_sq(n_resolutions, std::vector<double>(n_features, std::numeric_limits<double>::signaling_NaN()));
+    for (int i = 0; i < n_resolutions; ++i)
+    {
+        for (int l = 0; l < n_features; ++l)
+        {
+            double s = 0.0;
+            for (std::size_t j = 0; j < parameters.Y[l][i].size(); ++j)
+            {
+                for (std::size_t k = 0; k < parameters.Y[l][i][j].size(); ++k)
+                {
+                    double val = parameters.Y[l][i][j][k];
+                    s += val * val;
+                }
+            }
+            sum_Y_sq[i][l] = s;
+        }
+    }
+
     while (num_iterations_completed < max_iterations)
     {
         // Run one iteration of CAVI updates
@@ -159,9 +178,10 @@ CaviResult cavi(Parameters &parameters, int max_iterations, double relative_elbo
         // For tau_i_l related updates
         for (int i = 0; i < n_resolutions; ++i)
         {
+            TauUpdateContext ctx_i = make_tau_update_context(i, new_parameters);
             for (int l = 0; l < n_features; ++l)
             {
-                UpdateTauResult update_tau_i_l = compute_update_tau(i, l, new_parameters);
+                UpdateTauResult update_tau_i_l = compute_update_tau(i, l, ctx_i, sum_Y_sq[i][l], new_parameters);
                 new_parameters.alpha_hat_tau[i][l] = update_tau_i_l.update_alpha_hat_tau;
                 new_parameters.beta_hat_tau[i][l] = update_tau_i_l.update_beta_hat_tau;
             }

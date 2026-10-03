@@ -34,6 +34,14 @@ struct FZFUpdateContext
     std::vector<std::vector<double>> phi_F;
 };
 
+// Context holding resolution-level spatial factor Gram matrix and data projections for tau updates
+struct TauUpdateContext
+{
+    std::vector<double> lambda_bar_L;
+    std::vector<std::vector<double>> phi_tau;
+    std::vector<std::vector<double>> nu_tau;
+};
+
 // Parameter update grouping structs
 struct UpdateLZLResult
 {
@@ -72,9 +80,10 @@ double compute_update_sigma_squared_F(int i, int j, const Parameters &parameters
 UpdateFZFResult compute_update_F_Z_F(int i, int j, const FZFUpdateContext &ctx_i, const Parameters &parameters);
 
 // For tau_i_l related updates
+TauUpdateContext make_tau_update_context(int i, const Parameters &parameters);
 double compute_update_alpha_hat_tau(int i, int l, const Parameters &parameters);
-double compute_update_beta_hat_tau(int i, int l, const Parameters &parameters);
-UpdateTauResult compute_update_tau(int i, int l, const Parameters &parameters);
+double compute_update_beta_hat_tau(int i, int l, const TauUpdateContext &ctx_i, double precomputed_Y_squared_sum, const Parameters &parameters);
+UpdateTauResult compute_update_tau(int i, int l, const TauUpdateContext &ctx_i, double precomputed_Y_squared_sum, const Parameters &parameters);
 double compute_update_alpha_hat_t(int i, int l, const Parameters &parameters);
 double compute_update_beta_hat_t(int i, int l, const Parameters &parameters);
 UpdateTResult compute_update_t(int i, int l, const Parameters &parameters);

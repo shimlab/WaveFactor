@@ -173,6 +173,66 @@ UpdateFZFResult compute_update_F_Z_F(int i, int j, const FZFUpdateContext &ctx_i
 }
 
 // For tau_i_l related updates
+TauUpdateContext make_tau_update_context(int i, const Parameters &parameters)
+{
+    TauUpdateContext ctx_i;
+
+    // 1. Resolution energy sum lambda_bar_L[m] = sum_{j, k} lambda_L(i, j, k, m)
+    ctx_i.lambda_bar_L.assign(parameters.n_factors, std::numeric_limits<double>::signaling_NaN());
+    for (int m = 0; m < parameters.n_factors; ++m)
+    {
+        double sum_lam = 0.0;
+        for (std::size_t j = 0; j < parameters.mu_L[m][i].size(); ++j)
+        {
+            for (std::size_t k = 0; k < parameters.mu_L[m][i][j].size(); ++k)
+            {
+                sum_lam += lambda_L(i, j, k, m, parameters);
+            }
+        }
+        ctx_i.lambda_bar_L[m] = sum_lam;
+    }
+
+    // 2. Spatial factor Gram matrix phi_tau[m][mp] = sum_{j, k} xi_L(i, j, k, m) * xi_L(i, j, k, mp) with diagonal zeroed
+    ctx_i.phi_tau.assign(parameters.n_factors, std::vector<double>(parameters.n_factors, std::numeric_limits<double>::signaling_NaN()));
+    for (int m = 0; m < parameters.n_factors; ++m)
+    {
+        ctx_i.phi_tau[m][m] = 0.0;
+        for (int mp = m + 1; mp < parameters.n_factors; ++mp)
+        {
+            double sum_xi_cross = 0.0;
+            for (std::size_t j = 0; j < parameters.mu_L[m][i].size(); ++j)
+            {
+                for (std::size_t k = 0; k < parameters.mu_L[m][i][j].size(); ++k)
+                {
+                    sum_xi_cross += xi_L(i, j, k, m, parameters) * xi_L(i, j, k, mp, parameters);
+                }
+            }
+            ctx_i.phi_tau[m][mp] = sum_xi_cross;
+            ctx_i.phi_tau[mp][m] = sum_xi_cross;
+        }
+    }
+
+    // 3. Spatial wavelet data projection nu_tau[m][g] = sum_{j, k} Y[g][i][j][k] * xi_L(i, j, k, m)
+    ctx_i.nu_tau.assign(parameters.n_factors, std::vector<double>(parameters.n_features, std::numeric_limits<double>::signaling_NaN()));
+    for (int m = 0; m < parameters.n_factors; ++m)
+    {
+        for (int g = 0; g < parameters.n_features; ++g)
+        {
+            double sum_xi_Y = 0.0;
+            for (std::size_t j = 0; j < parameters.mu_L[m][i].size(); ++j)
+            {
+                for (std::size_t k = 0; k < parameters.mu_L[m][i][j].size(); ++k)
+                {
+                    sum_xi_Y += parameters.Y[g][i][j][k] * xi_L(i, j, k, m, parameters);
+                }
+            }
+            ctx_i.nu_tau[m][g] = sum_xi_Y;
+        }
+    }
+
+    return ctx_i;
+}
+
 double compute_update_alpha_hat_tau(int i, int l, const Parameters &parameters)
 {
     double alpha_tau_i_l = parameters.alpha_tau[i][l];
@@ -185,45 +245,38 @@ double compute_update_alpha_hat_tau(int i, int l, const Parameters &parameters)
     return N_i / 2.0 + alpha_tau_i_l;
 }
 
-double compute_update_beta_hat_tau(int i, int l, const Parameters &parameters)
+double compute_update_beta_hat_tau(int i, int l, const TauUpdateContext &ctx_i, double precomputed_Y_squared_sum, const Parameters &parameters)
 {
     double beta_tau_i_l = parameters.beta_tau[i][l];
 
-    double Y_squared_sum = 0.0;
     double Y_xi_sum = 0.0;
-    double lambda_xi_sum = 0.0;
-    double xi_product_sum = 0.0;
+    double lambda_sum = 0.0;
+    double phi_sum = 0.0;
 
-    size_t max_j = parameters.Y[l][i].size();
-    size_t max_m = parameters.n_factors;
-    for (size_t j = 0; j < max_j; ++j)
+    int n_factors = parameters.n_factors;
+    for (int m = 0; m < n_factors; ++m)
     {
-        size_t max_k = parameters.Y[l][i][j].size();
-        for (size_t k = 0; k < max_k; ++k)
-        {
-            double Y_ijk_l = parameters.Y[l][i][j][k];
-            Y_squared_sum += Y_ijk_l * Y_ijk_l;
+        double xi_F_m_l = xi_F(m, l, parameters);
+        double lambda_F_m_l = lambda_F(m, l, parameters);
 
-            double xi_sum_m = 0.0;
-            for (size_t m = 0; m < max_m; ++m)
-            {
-                double xi_product = xi_L(i, j, k, m, parameters) * xi_F(m, l, parameters);
-                double lambda_product = lambda_L(i, j, k, m, parameters) * lambda_F(m, l, parameters);
-                xi_sum_m += xi_product;
-                lambda_xi_sum += lambda_product - xi_product * xi_product;
-            }
-            Y_xi_sum += Y_ijk_l * xi_sum_m;
-            xi_product_sum += xi_sum_m * xi_sum_m;
+        Y_xi_sum += xi_F_m_l * ctx_i.nu_tau[m][l];
+        lambda_sum += lambda_F_m_l * ctx_i.lambda_bar_L[m];
+
+        double inner_phi = 0.0;
+        for (int mp = 0; mp < n_factors; ++mp)
+        {
+            inner_phi += ctx_i.phi_tau[m][mp] * xi_F(mp, l, parameters);
         }
+        phi_sum += xi_F_m_l * inner_phi;
     }
 
-    return beta_tau_i_l + 0.5 * (Y_squared_sum - 2 * Y_xi_sum + lambda_xi_sum + xi_product_sum);
+    return beta_tau_i_l + 0.5 * (precomputed_Y_squared_sum - 2.0 * Y_xi_sum + lambda_sum + phi_sum);
 }
 
-UpdateTauResult compute_update_tau(int i, int l, const Parameters &parameters)
+UpdateTauResult compute_update_tau(int i, int l, const TauUpdateContext &ctx_i, double precomputed_Y_squared_sum, const Parameters &parameters)
 {
     double update_alpha_hat_tau_i_l = compute_update_alpha_hat_tau(i, l, parameters);
-    double update_beta_hat_tau_i_l = compute_update_beta_hat_tau(i, l, parameters);
+    double update_beta_hat_tau_i_l = compute_update_beta_hat_tau(i, l, ctx_i, precomputed_Y_squared_sum, parameters);
 
     return {
         update_alpha_hat_tau_i_l,
