@@ -51,6 +51,21 @@ LZLUpdateContext make_L_Z_L_update_context(int i, int l, const Parameters &param
         ctx_i_l.phi_L[m] = sum_m;
     }
 
+    // Fast BLAS Level 2 matrix-vector product dot_Y = Y_mat * nu_vec
+    Eigen::Map<const Eigen::VectorXd> nu_vec(ctx_i_l.nu_L.data(), parameters.n_features);
+    Eigen::VectorXd dot_Y_flat = parameters.Y_mats[i] * nu_vec;
+
+    ctx_i_l.dot_Y.resize(parameters.mu_L[l][i].size());
+    for (size_t j = 0; j < ctx_i_l.dot_Y.size(); ++j)
+    {
+        ctx_i_l.dot_Y[j].resize(parameters.mu_L[l][i][j].size());
+        for (size_t k = 0; k < ctx_i_l.dot_Y[j].size(); ++k)
+        {
+            int p = parameters.res_maps[i].jk_to_p[j][k];
+            ctx_i_l.dot_Y[j][k] = dot_Y_flat(p);
+        }
+    }
+
     return ctx_i_l;
 }
 
@@ -125,6 +140,78 @@ FZFUpdateContext make_F_Z_F_update_context(int i, const Parameters &parameters)
     }
 
     return ctx_i;
+}
+
+FZFUpdateContext make_F_Z_F_update_context(int i, const Parameters &parameters, const SharedProjections &sp)
+{
+    FZFUpdateContext ctx_i;
+    ctx_i.nu_F.resize(parameters.n_resolutions);
+    ctx_i.phi_F.resize(parameters.n_resolutions);
+    for (int a = 0; a < parameters.n_resolutions; ++a)
+    {
+        ctx_i.nu_F[a] = sp.nu_L_res[a][i];
+        ctx_i.phi_F[a] = sp.phi_L_res[a][i];
+    }
+    return ctx_i;
+}
+
+SharedProjections compute_shared_projections(const Parameters &parameters)
+{
+    int n_res = parameters.n_resolutions;
+    int n_factors = parameters.n_factors;
+    int n_features = parameters.n_features;
+
+    SharedProjections sp;
+    sp.lambda_bar_L.assign(n_res, std::vector<double>(n_factors, 0.0));
+    sp.phi_L_res.assign(n_res, std::vector<std::vector<double>>(n_factors, std::vector<double>(n_factors, 0.0)));
+    sp.nu_L_res.assign(n_res, std::vector<std::vector<double>>(n_factors, std::vector<double>(n_features, 0.0)));
+
+    for (int i = 0; i < n_res; ++i)
+    {
+        int N_i = parameters.res_maps[i].N_i;
+        Eigen::MatrixXd Xi_L_mat(N_i, n_factors);
+
+        for (int m = 0; m < n_factors; ++m)
+        {
+            double sum_lam = 0.0;
+            for (size_t j = 0; j < parameters.mu_L[m][i].size(); ++j)
+            {
+                for (size_t k = 0; k < parameters.mu_L[m][i][j].size(); ++k)
+                {
+                    int p = parameters.res_maps[i].jk_to_p[j][k];
+                    Xi_L_mat(p, m) = xi_L(i, j, k, m, parameters);
+                    sum_lam += lambda_L(i, j, k, m, parameters);
+                }
+            }
+            sp.lambda_bar_L[i][m] = sum_lam;
+        }
+
+        // Fast BLAS Gram matrix: phi_mat = Xi_L_mat^T * Xi_L_mat (K x K)
+        Eigen::MatrixXd phi_mat = Xi_L_mat.transpose() * Xi_L_mat;
+        for (int m = 0; m < n_factors; ++m)
+        {
+            sp.phi_L_res[i][m][m] = 0.0;
+            for (int mp = 0; mp < n_factors; ++mp)
+            {
+                if (m != mp)
+                {
+                    sp.phi_L_res[i][m][mp] = phi_mat(m, mp);
+                }
+            }
+        }
+
+        // Fast BLAS Data projection: nu_mat = Xi_L_mat^T * Y_mats[i] (K x G)
+        Eigen::MatrixXd nu_mat = Xi_L_mat.transpose() * parameters.Y_mats[i];
+        for (int m = 0; m < n_factors; ++m)
+        {
+            for (int g = 0; g < n_features; ++g)
+            {
+                sp.nu_L_res[i][m][g] = nu_mat(m, g);
+            }
+        }
+    }
+
+    return sp;
 }
 
 double compute_update_sigma_squared_F(int i, int j, const Parameters &parameters)
@@ -230,6 +317,15 @@ TauUpdateContext make_tau_update_context(int i, const Parameters &parameters)
         }
     }
 
+    return ctx_i;
+}
+
+TauUpdateContext make_tau_update_context(int i, const Parameters &parameters, const SharedProjections &sp)
+{
+    TauUpdateContext ctx_i;
+    ctx_i.lambda_bar_L = sp.lambda_bar_L[i];
+    ctx_i.phi_tau = sp.phi_L_res[i];
+    ctx_i.nu_tau = sp.nu_L_res[i];
     return ctx_i;
 }
 

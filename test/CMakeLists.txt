@@ -33,3 +33,5 @@ add_test(
 )
 
 target_include_directories(${This} PRIVATE ${CMAKE_SOURCE_DIR}/src)
+
+target_compile_options(${This} PRIVATE ${WAVEFACTOR_COMPILE_OPTIONS})
