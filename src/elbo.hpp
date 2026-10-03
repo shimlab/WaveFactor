@@ -93,6 +93,6 @@ inline double compute_E_negative_variational_log_likelihood_tau_i_l(int i, int l
     return alpha_hat_tau_i_l - std::log(beta_hat_tau_i_l) + std::lgamma(alpha_hat_tau_i_l) +
            (1 - alpha_hat_tau_i_l) * Eigen::numext::digamma(alpha_hat_tau_i_l);
 }
-double compute_elbo(const Parameters &parameters);
+double compute_elbo(bool assume_tau_updated, const Parameters &parameters);
 
 #endif /*ELBO_HPP_INCLUDED*/

@@ -107,7 +107,7 @@ CaviResult cavi(Parameters &parameters, int max_iterations, double relative_elbo
 {
     Tensor4D Y = parameters.Y;
     int num_iterations_completed = 0;
-    double elbo = compute_elbo(parameters);
+    double elbo = compute_elbo(false, parameters);
     std::vector<double> elbo_record;
     elbo_record.reserve(max_iterations + 1); // Reserve space to prevent reallocations, in turn speed up code. +1 to also store the initial elbo value (aka "iteration 0")
     elbo_record.push_back(elbo);
@@ -199,7 +199,7 @@ CaviResult cavi(Parameters &parameters, int max_iterations, double relative_elbo
         }
 
         // Discard current iteration and terminate if elbo dropped
-        elbo = compute_elbo(new_parameters);
+        elbo = compute_elbo(true, new_parameters);
         if (elbo < prev_elbo)
         {
             break;

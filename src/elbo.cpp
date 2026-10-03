@@ -25,15 +25,14 @@ double compute_E_log_likelihood_Y_ijk_l_given_pi_L_F_tau(int i, int j, int k, in
                                                    xi_quad_product_sum + lambda_product_sum));
 }
 
-double compute_elbo(const Parameters &parameters)
+double compute_elbo(bool assume_tau_updated, const Parameters &parameters)
 {
     double elbo = 0;
 
-    // Summing terms across factors and features
     int n_factors = parameters.n_factors;
     int n_features = parameters.n_features;
 
-    // Summing terms across factors and features
+    // Loop 1: F and Z_F
     for (int i = 0; i < n_factors; ++i)
     {
         for (int j = 0; j < n_features; ++j)
@@ -44,7 +43,7 @@ double compute_elbo(const Parameters &parameters)
         }
     }
 
-    // Summing terms across wavelet resolution and factors
+    // Loop 2: t
     for (int l = 0; l < n_factors; ++l)
     {
         for (int i = 0; i < parameters.mu_L[l].size(); ++i)
@@ -54,7 +53,7 @@ double compute_elbo(const Parameters &parameters)
         }
     }
 
-    // Summing terms across wavelet resolution and features
+    // Loop 3: tau
     for (int l = 0; l < n_features; ++l)
     {
         for (int i = 0; i < parameters.Y[l].size(); ++i)
@@ -64,7 +63,7 @@ double compute_elbo(const Parameters &parameters)
         }
     }
 
-    // Summing terms across wavelet coefficients and factors
+    // Loop 4: L and Z_L
     for (int l = 0; l < n_factors; ++l)
     {
         for (int i = 0; i < parameters.mu_L[l].size(); ++i)
@@ -81,16 +80,39 @@ double compute_elbo(const Parameters &parameters)
         }
     }
 
-    // Summing terms across wavelet coefficients and features
-    for (int l = 0; l < n_features; ++l)
+    // Loop 5: Expected Log-Likelihood of Y
+    if (assume_tau_updated)
     {
-        for (int i = 0; i < parameters.Y[l].size(); ++i)
+        for (int l = 0; l < n_features; ++l)
         {
-            for (int j = 0; j < parameters.Y[l][i].size(); ++j)
+            for (int i = 0; i < parameters.Y[l].size(); ++i)
             {
-                for (int k = 0; k < parameters.Y[l][i][j].size(); ++k)
+                double N_i = 0.0;
+                for (size_t j = 0; j < parameters.Y[l][i].size(); ++j)
                 {
-                    elbo += compute_E_log_likelihood_Y_ijk_l_given_pi_L_F_tau(i, j, k, l, parameters);
+                    N_i += parameters.Y[l][i][j].size();
+                }
+
+                double theta_tau_i_l = theta_tau(i, l, parameters);
+                double gamma_tau_i_l = gamma_tau(i, l, parameters);
+                double delta_beta = parameters.beta_hat_tau[i][l] - parameters.beta_tau[i][l];
+
+                elbo += 0.5 * N_i * theta_tau_i_l - gamma_tau_i_l * delta_beta;
+            }
+        }
+    }
+    else
+    {
+        for (int l = 0; l < n_features; ++l)
+        {
+            for (int i = 0; i < parameters.Y[l].size(); ++i)
+            {
+                for (int j = 0; j < parameters.Y[l][i].size(); ++j)
+                {
+                    for (int k = 0; k < parameters.Y[l][i][j].size(); ++k)
+                    {
+                        elbo += compute_E_log_likelihood_Y_ijk_l_given_pi_L_F_tau(i, j, k, l, parameters);
+                    }
                 }
             }
         }
