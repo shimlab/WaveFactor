@@ -11,11 +11,7 @@ double u_F(int i, int l, int d, const Parameters &parameters)
 
 double s_bar_F(int i, int j, int k, int l, const LZLUpdateContext &ctx_i_l, const Parameters &parameters)
 {
-    double dot_Y = 0.0;
-    for (int d = 0; d < parameters.n_features; ++d)
-    {
-        dot_Y += ctx_i_l.nu_L[d] * parameters.Y[d][i][j][k];
-    }
+    double dot_Y = ctx_i_l.dot_Y[j][k];
 
     double dot_phi = 0.0;
     for (int m = 0; m < parameters.n_factors; ++m)

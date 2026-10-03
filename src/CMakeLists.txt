@@ -27,4 +27,4 @@ add_library(${This} STATIC ${Sources} ${Headers})
 target_link_libraries(${This} PUBLIC eigen)
 target_include_directories(${This} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 
-target_compile_options(${This} PRIVATE -O3 -march=native -funroll-loops -ffast-math)
+target_compile_options(${This} PRIVATE ${WAVEFACTOR_COMPILE_OPTIONS})
