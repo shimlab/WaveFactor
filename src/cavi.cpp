@@ -147,10 +147,9 @@ CaviResult cavi(Parameters &parameters, int max_iterations, double relative_elbo
         // For F_i_j, Z_F_i_j related updates
         for (int i = 0; i < n_factors; ++i)
         {
-            FZFUpdateContext ctx_i = make_F_Z_F_update_context(i, new_parameters, sp);
             for (int j = 0; j < n_features; ++j)
             {
-                UpdateFZFResult update_F_Z_F_i_j = compute_update_F_Z_F(i, j, ctx_i, new_parameters);
+                UpdateFZFResult update_F_Z_F_i_j = compute_update_F_Z_F(i, j, sp, new_parameters);
                 new_parameters.sigma_squared_F[i][j] = update_F_Z_F_i_j.update_sigma_squared_F;
                 new_parameters.mu_F[i][j] = update_F_Z_F_i_j.update_mu_F;
                 new_parameters.log_r_F[i][j] = update_F_Z_F_i_j.update_log_r_F;
@@ -161,10 +160,9 @@ CaviResult cavi(Parameters &parameters, int max_iterations, double relative_elbo
         // For tau_i_l related updates
         for (int i = 0; i < n_resolutions; ++i)
         {
-            TauUpdateContext ctx_i = make_tau_update_context(i, new_parameters, sp);
             for (int l = 0; l < n_features; ++l)
             {
-                UpdateTauResult update_tau_i_l = compute_update_tau(i, l, ctx_i, new_parameters.sum_Y_sq[i][l], new_parameters);
+                UpdateTauResult update_tau_i_l = compute_update_tau(i, l, sp, new_parameters.sum_Y_sq[i][l], new_parameters);
                 new_parameters.alpha_hat_tau[i][l] = update_tau_i_l.update_alpha_hat_tau;
                 new_parameters.beta_hat_tau[i][l] = update_tau_i_l.update_beta_hat_tau;
             }
