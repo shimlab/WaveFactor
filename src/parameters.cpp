@@ -1,5 +1,6 @@
 #include "parameters.hpp"
 #include <cmath>
+#include <limits>
 
 // Constructor to initialize all fields based on provided values
 Parameters::Parameters(int n_resolutions_init, int n_factors_init, int n_features_init,
@@ -54,6 +55,18 @@ Parameters::Parameters(int n_resolutions_init, int n_factors_init, int n_feature
             r_F[i][j] = std::exp(log_r_F[i][j]);
         }
     }
+
+    // Initialize cached N_coefs_per_res per resolution level i with signaling NaN for defensive poisoning
+    N_coefs_per_res.assign(n_resolutions, std::numeric_limits<double>::signaling_NaN());
+    for (size_t i = 0; i < N_coefs_per_res.size(); ++i)
+    {
+        double sum_n = 0.0;
+        for (size_t j = 0; j < Y[0][i].size(); ++j)
+        {
+            sum_n += Y[0][i][j].size();
+        }
+        N_coefs_per_res[i] = sum_n;
+    }
 }
 
 // Copy constructor for deep copying
@@ -79,7 +92,8 @@ Parameters::Parameters(const Parameters &other)
       alpha_hat_t(other.alpha_hat_t),
       beta_hat_t(other.beta_hat_t),
       alpha_hat_tau(other.alpha_hat_tau),
-      beta_hat_tau(other.beta_hat_tau) {}
+      beta_hat_tau(other.beta_hat_tau),
+      N_coefs_per_res(other.N_coefs_per_res) {}
 
 // Copy assignment operator for deep copying
 Parameters &Parameters::operator=(const Parameters &other)
@@ -109,6 +123,7 @@ Parameters &Parameters::operator=(const Parameters &other)
     beta_hat_t = other.beta_hat_t;
     alpha_hat_tau = other.alpha_hat_tau;
     beta_hat_tau = other.beta_hat_tau;
+    N_coefs_per_res = other.N_coefs_per_res;
 
     return *this;
 }

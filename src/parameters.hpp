@@ -28,6 +28,7 @@ public:
     Tensor2D beta_hat_t;
     Tensor2D alpha_hat_tau;
     Tensor2D beta_hat_tau;
+    Tensor1D N_coefs_per_res;
 
     // Constructor to initialize all fields based on provided values
     Parameters(int n_resolutions_init, int n_factors_init, int n_features_init,

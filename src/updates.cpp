@@ -236,12 +236,7 @@ TauUpdateContext make_tau_update_context(int i, const Parameters &parameters)
 double compute_update_alpha_hat_tau(int i, int l, const Parameters &parameters)
 {
     double alpha_tau_i_l = parameters.alpha_tau[i][l];
-    double N_i = 0.0;
-    for (size_t j = 0; j < parameters.Y[l][i].size(); ++j)
-    {
-        N_i += parameters.Y[l][i][j].size();
-    }
-
+    double N_i = parameters.N_coefs_per_res[i];
     return N_i / 2.0 + alpha_tau_i_l;
 }
 

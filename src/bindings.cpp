@@ -43,7 +43,8 @@ PYBIND11_MODULE(WaveFactor, m)
         .def_readwrite("alpha_hat_t", &Parameters::alpha_hat_t)
         .def_readwrite("beta_hat_t", &Parameters::beta_hat_t)
         .def_readwrite("alpha_hat_tau", &Parameters::alpha_hat_tau)
-        .def_readwrite("beta_hat_tau", &Parameters::beta_hat_tau);
+        .def_readwrite("beta_hat_tau", &Parameters::beta_hat_tau)
+        .def_readwrite("N_coefs_per_res", &Parameters::N_coefs_per_res);
 
     py::class_<CaviResult>(m, "CaviResult")
         .def(py::init<Parameters, std::vector<double>, double>())

@@ -203,6 +203,7 @@ def extract_cpp_parameters_to_dict(cpp_params: Any) -> Dict[str, Any]:
         "beta_hat_t": np.asarray(cpp_params.beta_hat_t, dtype=np.float64),
         "alpha_hat_tau": np.asarray(cpp_params.alpha_hat_tau, dtype=np.float64),
         "beta_hat_tau": np.asarray(cpp_params.beta_hat_tau, dtype=np.float64),
+        "N_coefs_per_res": np.asarray(cpp_params.N_coefs_per_res, dtype=np.float64),
     }
 
 
