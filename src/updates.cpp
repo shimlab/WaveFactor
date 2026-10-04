@@ -51,7 +51,6 @@ LZLUpdateContext make_L_Z_L_update_context(int i, int l, const Parameters &param
         ctx_i_l.phi_L[m] = sum_m;
     }
 
-    // Fast BLAS Level 2 matrix-vector product dot_Y = Y_mat * nu_vec
     Eigen::Map<const Eigen::VectorXd> nu_vec(ctx_i_l.nu_L.data(), parameters.n_features);
     Eigen::VectorXd dot_Y_flat = parameters.Y_mats[i] * nu_vec;
 
@@ -101,9 +100,9 @@ FZFTauUpdateContext make_F_Z_F_tau_update_context(const Parameters &parameters)
     int n_features = parameters.n_features;
 
     FZFTauUpdateContext ctx;
-    ctx.lambda_bar_L.assign(n_res, std::vector<double>(n_factors, 0.0));
-    ctx.phi_F.assign(n_res, std::vector<std::vector<double>>(n_factors, std::vector<double>(n_factors, 0.0)));
-    ctx.nu_F.assign(n_res, std::vector<std::vector<double>>(n_factors, std::vector<double>(n_features, 0.0)));
+    ctx.lambda_bar_L.assign(n_res, std::vector<double>(n_factors, std::numeric_limits<double>::signaling_NaN()));
+    ctx.phi_F.assign(n_res, std::vector<std::vector<double>>(n_factors, std::vector<double>(n_factors, std::numeric_limits<double>::signaling_NaN())));
+    ctx.nu_F.assign(n_res, std::vector<std::vector<double>>(n_factors, std::vector<double>(n_features, std::numeric_limits<double>::signaling_NaN())));
 
     for (int i = 0; i < n_res; ++i)
     {
@@ -125,7 +124,6 @@ FZFTauUpdateContext make_F_Z_F_tau_update_context(const Parameters &parameters)
             ctx.lambda_bar_L[i][m] = sum_lam;
         }
 
-        // Fast BLAS Gram matrix: phi_mat = Xi_L_mat^T * Xi_L_mat (K x K)
         Eigen::MatrixXd phi_mat = Xi_L_mat.transpose() * Xi_L_mat;
         for (int m = 0; m < n_factors; ++m)
         {
@@ -139,7 +137,6 @@ FZFTauUpdateContext make_F_Z_F_tau_update_context(const Parameters &parameters)
             }
         }
 
-        // Fast BLAS Data projection: nu_mat = Xi_L_mat^T * Y_mats[i] (K x G)
         Eigen::MatrixXd nu_mat = Xi_L_mat.transpose() * parameters.Y_mats[i];
         for (int m = 0; m < n_factors; ++m)
         {

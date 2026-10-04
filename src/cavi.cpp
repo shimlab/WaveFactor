@@ -141,7 +141,6 @@ CaviResult cavi(Parameters &parameters, int max_iterations, double relative_elbo
             }
         }
 
-        // Deduplicated spatial Gram matrix and data projections shared between F, Z_F and tau updates via BLAS dgemm
         FZFTauUpdateContext ctx_F_Z_F_tau = make_F_Z_F_tau_update_context(new_parameters);
 
         // For F_i_j, Z_F_i_j related updates
