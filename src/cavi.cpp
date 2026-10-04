@@ -141,15 +141,15 @@ CaviResult cavi(Parameters &parameters, int max_iterations, double relative_elbo
             }
         }
 
-        // Deduplicated spatial Gram matrix and data projections shared across updates via BLAS dgemm
-        UpdateContext ctx = make_update_context(new_parameters);
+        // Deduplicated spatial Gram matrix and data projections shared between F, Z_F and tau updates via BLAS dgemm
+        FZFTauUpdateContext ctx_F_Z_F_tau = make_F_Z_F_tau_update_context(new_parameters);
 
         // For F_i_j, Z_F_i_j related updates
         for (int i = 0; i < n_factors; ++i)
         {
             for (int j = 0; j < n_features; ++j)
             {
-                UpdateFZFResult update_F_Z_F_i_j = compute_update_F_Z_F(i, j, ctx, new_parameters);
+                UpdateFZFResult update_F_Z_F_i_j = compute_update_F_Z_F(i, j, ctx_F_Z_F_tau, new_parameters);
                 new_parameters.sigma_squared_F[i][j] = update_F_Z_F_i_j.update_sigma_squared_F;
                 new_parameters.mu_F[i][j] = update_F_Z_F_i_j.update_mu_F;
                 new_parameters.log_r_F[i][j] = update_F_Z_F_i_j.update_log_r_F;
@@ -162,7 +162,7 @@ CaviResult cavi(Parameters &parameters, int max_iterations, double relative_elbo
         {
             for (int l = 0; l < n_features; ++l)
             {
-                UpdateTauResult update_tau_i_l = compute_update_tau(i, l, ctx, new_parameters.sum_Y_sq[i][l], new_parameters);
+                UpdateTauResult update_tau_i_l = compute_update_tau(i, l, ctx_F_Z_F_tau, new_parameters.sum_Y_sq[i][l], new_parameters);
                 new_parameters.alpha_hat_tau[i][l] = update_tau_i_l.update_alpha_hat_tau;
                 new_parameters.beta_hat_tau[i][l] = update_tau_i_l.update_beta_hat_tau;
             }

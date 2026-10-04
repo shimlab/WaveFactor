@@ -67,7 +67,7 @@ TEST(CaviElboTest, ComputeElbo)
 TEST(CaviElboTest, ComputeElboTauUpdatedParity)
 {
     Parameters params = mocks::parameters;
-    UpdateContext ctx = make_update_context(params);
+    FZFTauUpdateContext ctx = make_F_Z_F_tau_update_context(params);
     for (int i = 0; i < params.n_resolutions; ++i)
     {
         for (int l = 0; l < params.n_features; ++l)

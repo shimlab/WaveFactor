@@ -40,7 +40,7 @@ double u_L(int a, int b, int c, int i, int j, const Parameters &parameters)
     return lambda_L_abc_i * gamma_tau_a_j;
 }
 
-double s_bar_L(int i, int j, const UpdateContext &ctx, const Parameters &parameters)
+double s_bar_L(int i, int j, const FZFTauUpdateContext &ctx, const Parameters &parameters)
 {
     double s_sum = 0.0;
     for (int a = 0; a < parameters.n_resolutions; ++a)

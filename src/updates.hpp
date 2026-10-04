@@ -28,15 +28,15 @@ struct LZLUpdateContext
     Tensor2D dot_Y;
 };
 
-// Context holding deduplicated spatial factor Gram matrix and data projections shared across updates
-struct UpdateContext
+// Context holding deduplicated spatial factor Gram matrix and data projections shared between F, Z_F and tau updates
+struct FZFTauUpdateContext
 {
     std::vector<std::vector<double>> lambda_bar_L;
     std::vector<std::vector<std::vector<double>>> phi_F;
     std::vector<std::vector<std::vector<double>>> nu_F;
 };
 
-UpdateContext make_update_context(const Parameters &parameters);
+FZFTauUpdateContext make_F_Z_F_tau_update_context(const Parameters &parameters);
 
 // Parameter update grouping structs
 struct UpdateLZLResult
@@ -72,12 +72,12 @@ UpdateLZLResult compute_update_L_Z_L(int i, int j, int k, int l, const LZLUpdate
 
 // For F_i_j, Z_F_i_j related updates
 double compute_update_sigma_squared_F(int i, int j, const Parameters &parameters);
-UpdateFZFResult compute_update_F_Z_F(int i, int j, const UpdateContext &ctx, const Parameters &parameters);
+UpdateFZFResult compute_update_F_Z_F(int i, int j, const FZFTauUpdateContext &ctx, const Parameters &parameters);
 
 // For tau_i_l related updates
 double compute_update_alpha_hat_tau(int i, int l, const Parameters &parameters);
-double compute_update_beta_hat_tau(int i, int l, const UpdateContext &ctx, double precomputed_Y_squared_sum, const Parameters &parameters);
-UpdateTauResult compute_update_tau(int i, int l, const UpdateContext &ctx, double precomputed_Y_squared_sum, const Parameters &parameters);
+double compute_update_beta_hat_tau(int i, int l, const FZFTauUpdateContext &ctx, double precomputed_Y_squared_sum, const Parameters &parameters);
+UpdateTauResult compute_update_tau(int i, int l, const FZFTauUpdateContext &ctx, double precomputed_Y_squared_sum, const Parameters &parameters);
 double compute_update_alpha_hat_t(int i, int l, const Parameters &parameters);
 double compute_update_beta_hat_t(int i, int l, const Parameters &parameters);
 UpdateTResult compute_update_t(int i, int l, const Parameters &parameters);

@@ -75,7 +75,7 @@ TEST(UtilitiesTest, UL)
 
 TEST(UtilitiesTest, SBarLWithContext)
 {
-    UpdateContext ctx = make_update_context(mocks::parameters);
+    FZFTauUpdateContext ctx = make_F_Z_F_tau_update_context(mocks::parameters);
     EXPECT_NEAR(s_bar_L(1, 1, ctx, mocks::parameters), mocks::s_bar_L_i_j, 0.001);
 }
 

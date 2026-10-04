@@ -94,13 +94,13 @@ UpdateLZLResult compute_update_L_Z_L(int i, int j, int k, int l, const LZLUpdate
 
 
 
-UpdateContext make_update_context(const Parameters &parameters)
+FZFTauUpdateContext make_F_Z_F_tau_update_context(const Parameters &parameters)
 {
     int n_res = parameters.n_resolutions;
     int n_factors = parameters.n_factors;
     int n_features = parameters.n_features;
 
-    UpdateContext ctx;
+    FZFTauUpdateContext ctx;
     ctx.lambda_bar_L.assign(n_res, std::vector<double>(n_factors, 0.0));
     ctx.phi_F.assign(n_res, std::vector<std::vector<double>>(n_factors, std::vector<double>(n_factors, 0.0)));
     ctx.nu_F.assign(n_res, std::vector<std::vector<double>>(n_factors, std::vector<double>(n_features, 0.0)));
@@ -159,7 +159,7 @@ double compute_update_sigma_squared_F(int i, int j, const Parameters &parameters
     return 1.0 / (1 + u_bar_L_i_j);
 }
 
-UpdateFZFResult compute_update_F_Z_F(int i, int j, const UpdateContext &ctx, const Parameters &parameters)
+UpdateFZFResult compute_update_F_Z_F(int i, int j, const FZFTauUpdateContext &ctx, const Parameters &parameters)
 {
     double update_sigma_squared_F_i_j = compute_update_sigma_squared_F(i, j, parameters);
     double s_bar_L_i_j = s_bar_L(i, j, ctx, parameters);
@@ -206,7 +206,7 @@ double compute_update_alpha_hat_tau(int i, int l, const Parameters &parameters)
     return N_i / 2.0 + alpha_tau_i_l;
 }
 
-double compute_update_beta_hat_tau(int i, int l, const UpdateContext &ctx, double precomputed_Y_squared_sum, const Parameters &parameters)
+double compute_update_beta_hat_tau(int i, int l, const FZFTauUpdateContext &ctx, double precomputed_Y_squared_sum, const Parameters &parameters)
 {
     double beta_tau_i_l = parameters.beta_tau[i][l];
 
@@ -234,7 +234,7 @@ double compute_update_beta_hat_tau(int i, int l, const UpdateContext &ctx, doubl
     return beta_tau_i_l + 0.5 * (precomputed_Y_squared_sum - 2.0 * Y_xi_sum + lambda_sum + phi_sum);
 }
 
-UpdateTauResult compute_update_tau(int i, int l, const UpdateContext &ctx, double precomputed_Y_squared_sum, const Parameters &parameters)
+UpdateTauResult compute_update_tau(int i, int l, const FZFTauUpdateContext &ctx, double precomputed_Y_squared_sum, const Parameters &parameters)
 {
     double update_alpha_hat_tau_i_l = compute_update_alpha_hat_tau(i, l, parameters);
     double update_beta_hat_tau_i_l = compute_update_beta_hat_tau(i, l, ctx, precomputed_Y_squared_sum, parameters);

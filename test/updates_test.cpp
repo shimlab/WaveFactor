@@ -36,9 +36,9 @@ TEST(CaviUpdatesTest, ComputeUpdateLZL)
     EXPECT_NEAR(update_L_Z_L.update_log_r_L, mocks::update_log_r_L_ijk_l, 0.001);
 }
 
-TEST(CaviUpdatesTest, MakeUpdateContext)
+TEST(CaviUpdatesTest, MakeFZFTauUpdateContext)
 {
-    UpdateContext ctx = make_update_context(mocks::parameters);
+    FZFTauUpdateContext ctx = make_F_Z_F_tau_update_context(mocks::parameters);
     EXPECT_EQ(ctx.lambda_bar_L.size(), static_cast<std::size_t>(mocks::parameters.n_resolutions));
     EXPECT_EQ(ctx.phi_F.size(), static_cast<std::size_t>(mocks::parameters.n_resolutions));
     EXPECT_EQ(ctx.nu_F.size(), static_cast<std::size_t>(mocks::parameters.n_resolutions));
@@ -77,7 +77,7 @@ TEST(CaviUpdatesTest, ComputeUpdateSigmaSquaredF)
 
 TEST(CaviUpdatesTest, ComputeUpdateFZF)
 {
-    UpdateContext ctx = make_update_context(mocks::parameters);
+    FZFTauUpdateContext ctx = make_F_Z_F_tau_update_context(mocks::parameters);
     auto update_F_Z_F = compute_update_F_Z_F(1, 1, ctx, mocks::parameters);
     EXPECT_NEAR(update_F_Z_F.update_sigma_squared_F, mocks::update_sigma_squared_F_i_j, 0.001);
     EXPECT_NEAR(update_F_Z_F.update_mu_F, mocks::update_mu_F_i_j, 0.001);
@@ -92,7 +92,7 @@ TEST(CaviUpdatesTest, ComputeUpdateAlphaHatTau)
 
 TEST(CaviUpdatesTest, ComputeUpdateTau)
 {
-    UpdateContext ctx = make_update_context(mocks::parameters);
+    FZFTauUpdateContext ctx = make_F_Z_F_tau_update_context(mocks::parameters);
     double sum_Y_sq_0 = mocks::parameters.sum_Y_sq[0][1];
     EXPECT_NEAR(compute_update_beta_hat_tau(0, 1, ctx, sum_Y_sq_0, mocks::parameters), mocks::update_beta_hat_tau_i_l_0, 0.001);
 
