@@ -67,21 +67,12 @@ TEST(CaviElboTest, ComputeElbo)
 TEST(CaviElboTest, ComputeElboTauUpdatedParity)
 {
     Parameters params = mocks::parameters;
+    FZFTauUpdateContext ctx = make_F_Z_F_tau_update_context(params);
     for (int i = 0; i < params.n_resolutions; ++i)
     {
-        TauUpdateContext ctx = make_tau_update_context(i, params);
         for (int l = 0; l < params.n_features; ++l)
         {
-            double sum_Y_sq = 0.0;
-            for (std::size_t j = 0; j < params.Y[l][i].size(); ++j)
-            {
-                for (std::size_t k = 0; k < params.Y[l][i][j].size(); ++k)
-                {
-                    double y = params.Y[l][i][j][k];
-                    sum_Y_sq += y * y;
-                }
-            }
-            params.beta_hat_tau[i][l] = compute_update_beta_hat_tau(i, l, ctx, sum_Y_sq, params);
+            params.beta_hat_tau[i][l] = compute_update_beta_hat_tau(i, l, ctx, params);
             params.alpha_hat_tau[i][l] = compute_update_alpha_hat_tau(i, l, params);
         }
     }

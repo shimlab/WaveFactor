@@ -6,6 +6,13 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
+# Optimization flags (portable -O3 by default, optional -march=native)
+option(ENABLE_NATIVE_TUNING "Enable host CPU architecture tuning (-march=native)" OFF)
+set(WAVEFACTOR_COMPILE_OPTIONS -O3)
+if(ENABLE_NATIVE_TUNING)
+    list(APPEND WAVEFACTOR_COMPILE_OPTIONS -march=native)
+endif()
+
 # Subdirectories for libraries
 add_subdirectory(src)
 add_subdirectory(lib/googletest)
@@ -54,8 +61,8 @@ if(BUILD_PYTHON_MODULE)
         target_link_libraries(WaveFactor PRIVATE eigen)
         target_include_directories(WaveFactor PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src)
 
-        # Optimization flags (GCC)
-        target_compile_options(WaveFactor PRIVATE -O3 -march=native -funroll-loops -ffast-math)
+        # Optimization flags
+        target_compile_options(WaveFactor PRIVATE ${WAVEFACTOR_COMPILE_OPTIONS})
 
         # Create __init__.py in binary directory for testing direct imports from build
         set(INIT_PY "${CMAKE_CURRENT_BINARY_DIR}/__init__.py")

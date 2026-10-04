@@ -2,6 +2,14 @@
 #define PARAMETERS_HPP_INCLUDED
 
 #include "tensor.hpp"
+#include <vector>
+#include <Eigen/Dense>
+
+struct WaveletIndexMap
+{
+    int n_coefficients;
+    std::vector<std::vector<int>> subband_to_flat_index;
+};
 
 class Parameters
 {
@@ -28,7 +36,9 @@ public:
     Tensor2D beta_hat_t;
     Tensor2D alpha_hat_tau;
     Tensor2D beta_hat_tau;
-    Tensor1D N_coefs_per_res;
+    std::vector<WaveletIndexMap> wavelet_indices;
+    std::vector<Eigen::MatrixXd> Y_mats;
+    std::vector<std::vector<double>> sum_Y_sq;
 
     // Constructor to initialize all fields based on provided values
     Parameters(int n_resolutions_init, int n_factors_init, int n_features_init,
@@ -55,6 +65,9 @@ public:
 
     // Copy assignment operator for deep copying
     Parameters &operator=(const Parameters &other);
+
+    // Fast copy of only mutable variational parameters (avoids copying static Y and priors)
+    void copy_variational_state(const Parameters &other);
 };
 
 #endif /*PARAMETERS_HPP_INCLUDED*/

@@ -15,7 +15,6 @@ PYBIND11_MODULE(WaveFactor, m)
         .def_readonly("F_shape", &CaviDimensions::F_shape)
         .def_readonly("L_skeleton", &CaviDimensions::L_skeleton)
         .def_readonly("Y_skeleton", &CaviDimensions::Y_skeleton);
-
     py::class_<Parameters>(m, "Parameters")
         .def(py::init<int, int, int, const Tensor4D &, const Tensor1D &, const Tensor2D &, const Tensor2D &,
                       const Tensor2D &, const Tensor2D &, const Tensor2D &, const Tensor4D &,
@@ -43,8 +42,7 @@ PYBIND11_MODULE(WaveFactor, m)
         .def_readwrite("alpha_hat_t", &Parameters::alpha_hat_t)
         .def_readwrite("beta_hat_t", &Parameters::beta_hat_t)
         .def_readwrite("alpha_hat_tau", &Parameters::alpha_hat_tau)
-        .def_readwrite("beta_hat_tau", &Parameters::beta_hat_tau)
-        .def_readwrite("N_coefs_per_res", &Parameters::N_coefs_per_res);
+        .def_readwrite("beta_hat_tau", &Parameters::beta_hat_tau);
 
     py::class_<CaviResult>(m, "CaviResult")
         .def(py::init<Parameters, std::vector<double>, double>())

@@ -25,22 +25,18 @@ struct LZLUpdateContext
     double theta_t_i_l;
     std::vector<double> nu_L;
     std::vector<double> phi_L;
+    Tensor2D dot_Y;
 };
 
-// Context holding factor-level invariants for s_bar_L in F and Z_F updates
-struct FZFUpdateContext
+// Context holding deduplicated spatial factor Gram matrix and data projections shared between F, Z_F and tau updates
+struct FZFTauUpdateContext
 {
-    std::vector<std::vector<double>> nu_F;
-    std::vector<std::vector<double>> phi_F;
+    std::vector<std::vector<double>> lambda_bar_L;
+    std::vector<std::vector<std::vector<double>>> phi_F;
+    std::vector<std::vector<std::vector<double>>> nu_F;
 };
 
-// Context holding resolution-level spatial factor Gram matrix and data projections for tau updates
-struct TauUpdateContext
-{
-    std::vector<double> lambda_bar_L;
-    std::vector<std::vector<double>> phi_tau;
-    std::vector<std::vector<double>> nu_tau;
-};
+FZFTauUpdateContext make_F_Z_F_tau_update_context(const Parameters &parameters);
 
 // Parameter update grouping structs
 struct UpdateLZLResult
@@ -75,15 +71,13 @@ double compute_update_sigma_squared_L(int i, int j, int k, int l, const Paramete
 UpdateLZLResult compute_update_L_Z_L(int i, int j, int k, int l, const LZLUpdateContext &ctx_i_l, const Parameters &parameters);
 
 // For F_i_j, Z_F_i_j related updates
-FZFUpdateContext make_F_Z_F_update_context(int i, const Parameters &parameters);
 double compute_update_sigma_squared_F(int i, int j, const Parameters &parameters);
-UpdateFZFResult compute_update_F_Z_F(int i, int j, const FZFUpdateContext &ctx_i, const Parameters &parameters);
+UpdateFZFResult compute_update_F_Z_F(int i, int j, const FZFTauUpdateContext &ctx, const Parameters &parameters);
 
 // For tau_i_l related updates
-TauUpdateContext make_tau_update_context(int i, const Parameters &parameters);
 double compute_update_alpha_hat_tau(int i, int l, const Parameters &parameters);
-double compute_update_beta_hat_tau(int i, int l, const TauUpdateContext &ctx_i, double precomputed_Y_squared_sum, const Parameters &parameters);
-UpdateTauResult compute_update_tau(int i, int l, const TauUpdateContext &ctx_i, double precomputed_Y_squared_sum, const Parameters &parameters);
+double compute_update_beta_hat_tau(int i, int l, const FZFTauUpdateContext &ctx, const Parameters &parameters);
+UpdateTauResult compute_update_tau(int i, int l, const FZFTauUpdateContext &ctx, const Parameters &parameters);
 double compute_update_alpha_hat_t(int i, int l, const Parameters &parameters);
 double compute_update_beta_hat_t(int i, int l, const Parameters &parameters);
 UpdateTResult compute_update_t(int i, int l, const Parameters &parameters);

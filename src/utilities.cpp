@@ -11,11 +11,7 @@ double u_F(int i, int l, int d, const Parameters &parameters)
 
 double s_bar_F(int i, int j, int k, int l, const LZLUpdateContext &ctx_i_l, const Parameters &parameters)
 {
-    double dot_Y = 0.0;
-    for (int d = 0; d < parameters.n_features; ++d)
-    {
-        dot_Y += ctx_i_l.nu_L[d] * parameters.Y[d][i][j][k];
-    }
+    double dot_Y = ctx_i_l.dot_Y[j][k];
 
     double dot_phi = 0.0;
     for (int m = 0; m < parameters.n_factors; ++m)
@@ -44,7 +40,7 @@ double u_L(int a, int b, int c, int i, int j, const Parameters &parameters)
     return lambda_L_abc_i * gamma_tau_a_j;
 }
 
-double s_bar_L(int i, int j, const FZFUpdateContext &ctx_i, const Parameters &parameters)
+double s_bar_L(int i, int j, const FZFTauUpdateContext &ctx, const Parameters &parameters)
 {
     double s_sum = 0.0;
     for (int a = 0; a < parameters.n_resolutions; ++a)
@@ -52,9 +48,9 @@ double s_bar_L(int i, int j, const FZFUpdateContext &ctx_i, const Parameters &pa
         double dot_phi = 0.0;
         for (int m = 0; m < parameters.n_factors; ++m)
         {
-            dot_phi += ctx_i.phi_F[a][m] * xi_F(m, j, parameters);
+            dot_phi += ctx.phi_F[a][i][m] * xi_F(m, j, parameters);
         }
-        s_sum += gamma_tau(a, j, parameters) * (ctx_i.nu_F[a][j] - dot_phi);
+        s_sum += gamma_tau(a, j, parameters) * (ctx.nu_F[a][i][j] - dot_phi);
     }
     return s_sum;
 }
