@@ -150,16 +150,66 @@ FZFTauUpdateContext make_F_Z_F_tau_update_context(const Parameters &parameters)
     return ctx;
 }
 
-double compute_update_sigma_squared_F(int i, int j, const Parameters &parameters)
+FZFUpdateContextForFactor make_F_Z_F_update_context_for_factor(int i, const FZFTauUpdateContext &ctx_F_Z_F_tau, const Parameters &parameters)
 {
-    double u_bar_L_i_j = u_bar_L(i, j, parameters);
-    return 1.0 / (1 + u_bar_L_i_j);
+    int n_res = parameters.n_resolutions;
+    int n_factors = parameters.n_factors;
+    int n_features = parameters.n_features;
+
+    FZFUpdateContextForFactor ctx_factor_i;
+    ctx_factor_i.s_bar_L.assign(n_features, std::numeric_limits<double>::signaling_NaN());
+    ctx_factor_i.sigma_squared_F.assign(n_features, std::numeric_limits<double>::signaling_NaN());
+
+    Eigen::MatrixXd Xi_F_mat(n_factors, n_features);
+    for (int m = 0; m < n_factors; ++m)
+    {
+        for (int g = 0; g < n_features; ++g)
+        {
+            Xi_F_mat(m, g) = xi_F(m, g, parameters);
+        }
+    }
+
+    Eigen::RowVectorXd s_bar_i = Eigen::RowVectorXd::Zero(n_features);
+    for (int a = 0; a < n_res; ++a)
+    {
+        Eigen::RowVectorXd phi_row(n_factors);
+        for (int m = 0; m < n_factors; ++m)
+        {
+            phi_row(m) = ctx_F_Z_F_tau.phi_F[a][i][m];
+        }
+        Eigen::RowVectorXd dot_phi = phi_row * Xi_F_mat;
+
+        Eigen::RowVectorXd nu_row(n_features);
+        for (int g = 0; g < n_features; ++g)
+        {
+            nu_row(g) = ctx_F_Z_F_tau.nu_F[a][i][g];
+        }
+
+        for (int g = 0; g < n_features; ++g)
+        {
+            s_bar_i(g) += gamma_tau(a, g, parameters) * (nu_row(g) - dot_phi(g));
+        }
+    }
+
+    for (int g = 0; g < n_features; ++g)
+    {
+        ctx_factor_i.s_bar_L[g] = s_bar_i(g);
+
+        double u_bar = 0.0;
+        for (int a = 0; a < n_res; ++a)
+        {
+            u_bar += gamma_tau(a, g, parameters) * ctx_F_Z_F_tau.lambda_bar_L[a][i];
+        }
+        ctx_factor_i.sigma_squared_F[g] = 1.0 / (1.0 + u_bar);
+    }
+
+    return ctx_factor_i;
 }
 
-UpdateFZFResult compute_update_F_Z_F(int i, int j, const FZFTauUpdateContext &ctx, const Parameters &parameters)
+UpdateFZFResult compute_update_F_Z_F(int i, int j, const FZFUpdateContextForFactor &ctx_factor_i, const Parameters &parameters)
 {
-    double update_sigma_squared_F_i_j = compute_update_sigma_squared_F(i, j, parameters);
-    double s_bar_L_i_j = s_bar_L(i, j, ctx, parameters);
+    double update_sigma_squared_F_i_j = ctx_factor_i.sigma_squared_F[j];
+    double s_bar_L_i_j = ctx_factor_i.s_bar_L[j];
     double update_mu_F_i_j = s_bar_L_i_j * update_sigma_squared_F_i_j;
 
     double log_pi_F_i_j = parameters.log_pi_F[i][j];

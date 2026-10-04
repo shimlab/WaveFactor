@@ -38,6 +38,15 @@ struct FZFTauUpdateContext
 
 FZFTauUpdateContext make_F_Z_F_tau_update_context(const Parameters &parameters);
 
+// Factor-level context holding invariants for factor i across all features j
+struct FZFUpdateContextForFactor
+{
+    std::vector<double> s_bar_L;
+    std::vector<double> sigma_squared_F;
+};
+
+FZFUpdateContextForFactor make_F_Z_F_update_context_for_factor(int i, const FZFTauUpdateContext &ctx_F_Z_F_tau, const Parameters &parameters);
+
 // Parameter update grouping structs
 struct UpdateLZLResult
 {
@@ -71,8 +80,7 @@ double compute_update_sigma_squared_L(int i, int j, int k, int l, const Paramete
 UpdateLZLResult compute_update_L_Z_L(int i, int j, int k, int l, const LZLUpdateContext &ctx_i_l, const Parameters &parameters);
 
 // For F_i_j, Z_F_i_j related updates
-double compute_update_sigma_squared_F(int i, int j, const Parameters &parameters);
-UpdateFZFResult compute_update_F_Z_F(int i, int j, const FZFTauUpdateContext &ctx, const Parameters &parameters);
+UpdateFZFResult compute_update_F_Z_F(int i, int j, const FZFUpdateContextForFactor &ctx_factor_i, const Parameters &parameters);
 
 // For tau_i_l related updates
 double compute_update_alpha_hat_tau(int i, int l, const Parameters &parameters);

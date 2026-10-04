@@ -70,15 +70,19 @@ TEST(CaviUpdatesTest, MakeFZFTauUpdateContext)
     }
 }
 
-TEST(CaviUpdatesTest, ComputeUpdateSigmaSquaredF)
+TEST(CaviUpdatesTest, MakeFZFUpdateContextForFactor)
 {
-    EXPECT_NEAR(compute_update_sigma_squared_F(1, 1, mocks::parameters), mocks::update_sigma_squared_F_i_j, 0.001);
+    FZFTauUpdateContext ctx_F_Z_F_tau = make_F_Z_F_tau_update_context(mocks::parameters);
+    FZFUpdateContextForFactor ctx_factor_1 = make_F_Z_F_update_context_for_factor(1, ctx_F_Z_F_tau, mocks::parameters);
+    EXPECT_NEAR(ctx_factor_1.s_bar_L[1], mocks::s_bar_L_i_j, 0.001);
+    EXPECT_NEAR(ctx_factor_1.sigma_squared_F[1], mocks::update_sigma_squared_F_i_j, 0.001);
 }
 
 TEST(CaviUpdatesTest, ComputeUpdateFZF)
 {
-    FZFTauUpdateContext ctx = make_F_Z_F_tau_update_context(mocks::parameters);
-    auto update_F_Z_F = compute_update_F_Z_F(1, 1, ctx, mocks::parameters);
+    FZFTauUpdateContext ctx_F_Z_F_tau = make_F_Z_F_tau_update_context(mocks::parameters);
+    FZFUpdateContextForFactor ctx_factor_1 = make_F_Z_F_update_context_for_factor(1, ctx_F_Z_F_tau, mocks::parameters);
+    auto update_F_Z_F = compute_update_F_Z_F(1, 1, ctx_factor_1, mocks::parameters);
     EXPECT_NEAR(update_F_Z_F.update_sigma_squared_F, mocks::update_sigma_squared_F_i_j, 0.001);
     EXPECT_NEAR(update_F_Z_F.update_mu_F, mocks::update_mu_F_i_j, 0.001);
     EXPECT_NEAR(update_F_Z_F.update_log_r_F, mocks::update_log_r_F_i_j, 0.001);

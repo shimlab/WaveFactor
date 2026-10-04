@@ -67,19 +67,3 @@ TEST(UtilitiesTest, UBarF)
 {
     EXPECT_NEAR(u_bar_F(1, 1, mocks::parameters), mocks::u_bar_F_i_l, 0.001);
 }
-
-TEST(UtilitiesTest, UL)
-{
-    EXPECT_NEAR(u_L(1, 1, 1, 1, 1, mocks::parameters), mocks::u_L_abc_i_j, 0.001);
-}
-
-TEST(UtilitiesTest, SBarLWithContext)
-{
-    FZFTauUpdateContext ctx = make_F_Z_F_tau_update_context(mocks::parameters);
-    EXPECT_NEAR(s_bar_L(1, 1, ctx, mocks::parameters), mocks::s_bar_L_i_j, 0.001);
-}
-
-TEST(UtilitiesTest, UBarL)
-{
-    EXPECT_NEAR(u_bar_L(1, 1, mocks::parameters), mocks::u_bar_L_i_j, 0.001);
-}
