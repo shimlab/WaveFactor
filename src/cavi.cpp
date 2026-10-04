@@ -162,7 +162,7 @@ CaviResult cavi(Parameters &parameters, int max_iterations, double relative_elbo
         {
             for (int l = 0; l < n_features; ++l)
             {
-                UpdateTauResult update_tau_i_l = compute_update_tau(i, l, ctx_F_Z_F_tau, new_parameters.sum_Y_sq[i][l], new_parameters);
+                UpdateTauResult update_tau_i_l = compute_update_tau(i, l, ctx_F_Z_F_tau, new_parameters);
                 new_parameters.alpha_hat_tau[i][l] = update_tau_i_l.update_alpha_hat_tau;
                 new_parameters.beta_hat_tau[i][l] = update_tau_i_l.update_beta_hat_tau;
             }

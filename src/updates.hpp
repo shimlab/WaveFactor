@@ -76,8 +76,8 @@ UpdateFZFResult compute_update_F_Z_F(int i, int j, const FZFTauUpdateContext &ct
 
 // For tau_i_l related updates
 double compute_update_alpha_hat_tau(int i, int l, const Parameters &parameters);
-double compute_update_beta_hat_tau(int i, int l, const FZFTauUpdateContext &ctx, double precomputed_Y_squared_sum, const Parameters &parameters);
-UpdateTauResult compute_update_tau(int i, int l, const FZFTauUpdateContext &ctx, double precomputed_Y_squared_sum, const Parameters &parameters);
+double compute_update_beta_hat_tau(int i, int l, const FZFTauUpdateContext &ctx, const Parameters &parameters);
+UpdateTauResult compute_update_tau(int i, int l, const FZFTauUpdateContext &ctx, const Parameters &parameters);
 double compute_update_alpha_hat_t(int i, int l, const Parameters &parameters);
 double compute_update_beta_hat_t(int i, int l, const Parameters &parameters);
 UpdateTResult compute_update_t(int i, int l, const Parameters &parameters);

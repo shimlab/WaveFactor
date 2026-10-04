@@ -206,9 +206,10 @@ double compute_update_alpha_hat_tau(int i, int l, const Parameters &parameters)
     return N_i / 2.0 + alpha_tau_i_l;
 }
 
-double compute_update_beta_hat_tau(int i, int l, const FZFTauUpdateContext &ctx, double precomputed_Y_squared_sum, const Parameters &parameters)
+double compute_update_beta_hat_tau(int i, int l, const FZFTauUpdateContext &ctx, const Parameters &parameters)
 {
     double beta_tau_i_l = parameters.beta_tau[i][l];
+    double sum_Y_sq = parameters.sum_Y_sq[i][l];
 
     double Y_xi_sum = 0.0;
     double lambda_sum = 0.0;
@@ -231,13 +232,13 @@ double compute_update_beta_hat_tau(int i, int l, const FZFTauUpdateContext &ctx,
         phi_sum += xi_F_m_l * inner_phi;
     }
 
-    return beta_tau_i_l + 0.5 * (precomputed_Y_squared_sum - 2.0 * Y_xi_sum + lambda_sum + phi_sum);
+    return beta_tau_i_l + 0.5 * (sum_Y_sq - 2.0 * Y_xi_sum + lambda_sum + phi_sum);
 }
 
-UpdateTauResult compute_update_tau(int i, int l, const FZFTauUpdateContext &ctx, double precomputed_Y_squared_sum, const Parameters &parameters)
+UpdateTauResult compute_update_tau(int i, int l, const FZFTauUpdateContext &ctx, const Parameters &parameters)
 {
     double update_alpha_hat_tau_i_l = compute_update_alpha_hat_tau(i, l, parameters);
-    double update_beta_hat_tau_i_l = compute_update_beta_hat_tau(i, l, ctx, precomputed_Y_squared_sum, parameters);
+    double update_beta_hat_tau_i_l = compute_update_beta_hat_tau(i, l, ctx, parameters);
 
     return {
         update_alpha_hat_tau_i_l,

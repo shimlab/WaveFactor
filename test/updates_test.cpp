@@ -93,19 +93,17 @@ TEST(CaviUpdatesTest, ComputeUpdateAlphaHatTau)
 TEST(CaviUpdatesTest, ComputeUpdateTau)
 {
     FZFTauUpdateContext ctx = make_F_Z_F_tau_update_context(mocks::parameters);
-    double sum_Y_sq_0 = mocks::parameters.sum_Y_sq[0][1];
-    EXPECT_NEAR(compute_update_beta_hat_tau(0, 1, ctx, sum_Y_sq_0, mocks::parameters), mocks::update_beta_hat_tau_i_l_0, 0.001);
+    EXPECT_NEAR(compute_update_beta_hat_tau(0, 1, ctx, mocks::parameters), mocks::update_beta_hat_tau_i_l_0, 0.001);
+    EXPECT_NEAR(compute_update_beta_hat_tau(1, 1, ctx, mocks::parameters), mocks::update_beta_hat_tau_i_l_1, 0.001);
 
-    double sum_Y_sq_1 = mocks::parameters.sum_Y_sq[1][1];
-    EXPECT_NEAR(compute_update_beta_hat_tau(1, 1, ctx, sum_Y_sq_1, mocks::parameters), mocks::update_beta_hat_tau_i_l_1, 0.001);
-
-    auto update_tau = compute_update_tau(1, 1, ctx, sum_Y_sq_1, mocks::parameters);
+    auto update_tau = compute_update_tau(1, 1, ctx, mocks::parameters);
     EXPECT_NEAR(update_tau.update_alpha_hat_tau, mocks::update_alpha_hat_tau_i_l_1, 0.001);
     EXPECT_NEAR(update_tau.update_beta_hat_tau, mocks::update_beta_hat_tau_i_l_1, 0.001);
 
     // Verify defensive NaN poisoning: passing signaling NaN for sum_Y_sq must propagate NaN
-    double nan_poison = std::numeric_limits<double>::signaling_NaN();
-    EXPECT_TRUE(std::isnan(compute_update_beta_hat_tau(1, 1, ctx, nan_poison, mocks::parameters)));
+    Parameters poisoned_params = mocks::parameters;
+    poisoned_params.sum_Y_sq[1][1] = std::numeric_limits<double>::signaling_NaN();
+    EXPECT_TRUE(std::isnan(compute_update_beta_hat_tau(1, 1, ctx, poisoned_params)));
 }
 
 TEST(CaviUpdatesTest, ComputeUpdateAlphaHatT)

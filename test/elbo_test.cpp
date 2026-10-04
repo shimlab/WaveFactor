@@ -72,8 +72,7 @@ TEST(CaviElboTest, ComputeElboTauUpdatedParity)
     {
         for (int l = 0; l < params.n_features; ++l)
         {
-            double sum_Y_sq = params.sum_Y_sq[i][l];
-            params.beta_hat_tau[i][l] = compute_update_beta_hat_tau(i, l, ctx, sum_Y_sq, params);
+            params.beta_hat_tau[i][l] = compute_update_beta_hat_tau(i, l, ctx, params);
             params.alpha_hat_tau[i][l] = compute_update_alpha_hat_tau(i, l, params);
         }
     }
