@@ -56,28 +56,26 @@ Parameters::Parameters(int n_resolutions_init, int n_factors_init, int n_feature
         }
     }
 
-    // Initialize wavelet index maps, flat Y matrices, static sum_Y_sq, and N_coefs_per_res
+    // Initialize wavelet index maps, flat Y matrices, and static sum_Y_sq
     wavelet_indices.resize(n_resolutions);
     Y_mats.resize(n_resolutions);
     sum_Y_sq.resize(n_resolutions);
-    N_coefs_per_res.assign(n_resolutions, std::numeric_limits<double>::signaling_NaN());
 
     for (size_t i = 0; i < static_cast<size_t>(n_resolutions); ++i)
     {
         size_t n_j = Y[0][i].size();
-        wavelet_indices[i].jk_to_p.resize(n_j);
+        wavelet_indices[i].subband_to_flat_index.resize(n_j);
         int p = 0;
         for (size_t j = 0; j < n_j; ++j)
         {
             size_t n_k = Y[0][i][j].size();
-            wavelet_indices[i].jk_to_p[j].resize(n_k);
+            wavelet_indices[i].subband_to_flat_index[j].resize(n_k);
             for (size_t k = 0; k < n_k; ++k)
             {
-                wavelet_indices[i].jk_to_p[j][k] = p++;
+                wavelet_indices[i].subband_to_flat_index[j][k] = p++;
             }
         }
-        wavelet_indices[i].N_i = p;
-        N_coefs_per_res[i] = static_cast<double>(p);
+        wavelet_indices[i].n_coefficients = p;
 
         Y_mats[i].resize(p, n_features);
         sum_Y_sq[i].resize(n_features);
@@ -87,7 +85,7 @@ Parameters::Parameters(int n_resolutions_init, int n_factors_init, int n_feature
             {
                 for (size_t k = 0; k < Y[l][i][j].size(); ++k)
                 {
-                    int p_idx = wavelet_indices[i].jk_to_p[j][k];
+                    int p_idx = wavelet_indices[i].subband_to_flat_index[j][k];
                     Y_mats[i](p_idx, l) = Y[l][i][j][k];
                 }
             }
@@ -120,7 +118,6 @@ Parameters::Parameters(const Parameters &other)
       beta_hat_t(other.beta_hat_t),
       alpha_hat_tau(other.alpha_hat_tau),
       beta_hat_tau(other.beta_hat_tau),
-      N_coefs_per_res(other.N_coefs_per_res),
       wavelet_indices(other.wavelet_indices),
       Y_mats(other.Y_mats),
       sum_Y_sq(other.sum_Y_sq) {}
@@ -153,7 +150,6 @@ Parameters &Parameters::operator=(const Parameters &other)
     beta_hat_t = other.beta_hat_t;
     alpha_hat_tau = other.alpha_hat_tau;
     beta_hat_tau = other.beta_hat_tau;
-    N_coefs_per_res = other.N_coefs_per_res;
     wavelet_indices = other.wavelet_indices;
     Y_mats = other.Y_mats;
     sum_Y_sq = other.sum_Y_sq;

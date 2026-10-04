@@ -7,8 +7,8 @@
 
 struct WaveletIndexMap
 {
-    int N_i;
-    std::vector<std::vector<int>> jk_to_p;
+    int n_coefficients;
+    std::vector<std::vector<int>> subband_to_flat_index;
 };
 
 class Parameters
@@ -36,7 +36,6 @@ public:
     Tensor2D beta_hat_t;
     Tensor2D alpha_hat_tau;
     Tensor2D beta_hat_tau;
-    Tensor1D N_coefs_per_res;
     std::vector<WaveletIndexMap> wavelet_indices;
     std::vector<Eigen::MatrixXd> Y_mats;
     std::vector<std::vector<double>> sum_Y_sq;

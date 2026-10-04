@@ -179,7 +179,7 @@ inline double compute_elbo(bool assume_tau_updated, const Parameters &parameters
         {
             for (int i = 0; i < parameters.Y[l].size(); ++i)
             {
-                double N_i = parameters.N_coefs_per_res[i];
+                double N_i = static_cast<double>(parameters.wavelet_indices[i].n_coefficients);
                 double theta_tau_i_l = theta_tau(i, l, parameters);
                 double gamma_tau_i_l = gamma_tau(i, l, parameters);
                 double delta_beta = parameters.beta_hat_tau[i][l] - parameters.beta_tau[i][l];

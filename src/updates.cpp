@@ -61,7 +61,7 @@ LZLUpdateContext make_L_Z_L_update_context(int i, int l, const Parameters &param
         ctx_i_l.dot_Y[j].resize(parameters.mu_L[l][i][j].size());
         for (size_t k = 0; k < ctx_i_l.dot_Y[j].size(); ++k)
         {
-            int p = parameters.wavelet_indices[i].jk_to_p[j][k];
+            int p = parameters.wavelet_indices[i].subband_to_flat_index[j][k];
             ctx_i_l.dot_Y[j][k] = dot_Y_flat(p);
         }
     }
@@ -107,7 +107,7 @@ FZFTauUpdateContext make_F_Z_F_tau_update_context(const Parameters &parameters)
 
     for (int i = 0; i < n_res; ++i)
     {
-        int N_i = parameters.wavelet_indices[i].N_i;
+        int N_i = parameters.wavelet_indices[i].n_coefficients;
         Eigen::MatrixXd Xi_L_mat(N_i, n_factors);
 
         for (int m = 0; m < n_factors; ++m)
@@ -117,7 +117,7 @@ FZFTauUpdateContext make_F_Z_F_tau_update_context(const Parameters &parameters)
             {
                 for (size_t k = 0; k < parameters.mu_L[m][i][j].size(); ++k)
                 {
-                    int p = parameters.wavelet_indices[i].jk_to_p[j][k];
+                    int p = parameters.wavelet_indices[i].subband_to_flat_index[j][k];
                     Xi_L_mat(p, m) = xi_L(i, j, k, m, parameters);
                     sum_lam += lambda_L(i, j, k, m, parameters);
                 }
@@ -202,7 +202,7 @@ UpdateFZFResult compute_update_F_Z_F(int i, int j, const FZFTauUpdateContext &ct
 double compute_update_alpha_hat_tau(int i, int l, const Parameters &parameters)
 {
     double alpha_tau_i_l = parameters.alpha_tau[i][l];
-    double N_i = parameters.N_coefs_per_res[i];
+    double N_i = static_cast<double>(parameters.wavelet_indices[i].n_coefficients);
     return N_i / 2.0 + alpha_tau_i_l;
 }
 

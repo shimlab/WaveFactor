@@ -16,6 +16,10 @@ PYBIND11_MODULE(WaveFactor, m)
         .def_readonly("L_skeleton", &CaviDimensions::L_skeleton)
         .def_readonly("Y_skeleton", &CaviDimensions::Y_skeleton);
 
+    py::class_<WaveletIndexMap>(m, "WaveletIndexMap")
+        .def_readonly("n_coefficients", &WaveletIndexMap::n_coefficients)
+        .def_readonly("subband_to_flat_index", &WaveletIndexMap::subband_to_flat_index);
+
     py::class_<Parameters>(m, "Parameters")
         .def(py::init<int, int, int, const Tensor4D &, const Tensor1D &, const Tensor2D &, const Tensor2D &,
                       const Tensor2D &, const Tensor2D &, const Tensor2D &, const Tensor4D &,
@@ -44,7 +48,16 @@ PYBIND11_MODULE(WaveFactor, m)
         .def_readwrite("beta_hat_t", &Parameters::beta_hat_t)
         .def_readwrite("alpha_hat_tau", &Parameters::alpha_hat_tau)
         .def_readwrite("beta_hat_tau", &Parameters::beta_hat_tau)
-        .def_readwrite("N_coefs_per_res", &Parameters::N_coefs_per_res);
+        .def_readonly("wavelet_indices", &Parameters::wavelet_indices)
+        .def_property_readonly("N_coefs_per_res", [](const Parameters &p) {
+            std::vector<double> counts;
+            counts.reserve(p.wavelet_indices.size());
+            for (const auto &w : p.wavelet_indices)
+            {
+                counts.push_back(static_cast<double>(w.n_coefficients));
+            }
+            return counts;
+        });
 
     py::class_<CaviResult>(m, "CaviResult")
         .def(py::init<Parameters, std::vector<double>, double>())
