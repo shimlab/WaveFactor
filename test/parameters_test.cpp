@@ -8,10 +8,10 @@ TEST(ParametersTest, PrecomputedResolutionDimensions)
     EXPECT_DOUBLE_EQ(mocks::parameters.N_coefs_per_res[0], 4.0);
     EXPECT_DOUBLE_EQ(mocks::parameters.N_coefs_per_res[1], 12.0);
 
-    // Verify precomputed resolution maps, flat Y matrices, and static sum_Y_sq
-    EXPECT_EQ(mocks::parameters.res_maps.size(), 2);
-    EXPECT_EQ(mocks::parameters.res_maps[0].N_i, 4);
-    EXPECT_EQ(mocks::parameters.res_maps[1].N_i, 12);
+    // Verify precomputed wavelet index maps, flat Y matrices, and static sum_Y_sq
+    EXPECT_EQ(mocks::parameters.wavelet_indices.size(), 2);
+    EXPECT_EQ(mocks::parameters.wavelet_indices[0].N_i, 4);
+    EXPECT_EQ(mocks::parameters.wavelet_indices[1].N_i, 12);
     EXPECT_EQ(mocks::parameters.Y_mats.size(), 2);
     EXPECT_EQ(mocks::parameters.Y_mats[0].rows(), 4);
     EXPECT_EQ(mocks::parameters.Y_mats[0].cols(), 3);
@@ -26,7 +26,7 @@ TEST(ParametersTest, PrecomputedResolutionDimensions)
     EXPECT_EQ(copied.N_coefs_per_res.size(), 2);
     EXPECT_DOUBLE_EQ(copied.N_coefs_per_res[0], 4.0);
     EXPECT_DOUBLE_EQ(copied.N_coefs_per_res[1], 12.0);
-    EXPECT_EQ(copied.res_maps.size(), 2);
+    EXPECT_EQ(copied.wavelet_indices.size(), 2);
     EXPECT_EQ(copied.Y_mats.size(), 2);
     EXPECT_EQ(copied.sum_Y_sq.size(), 2);
 
@@ -36,7 +36,7 @@ TEST(ParametersTest, PrecomputedResolutionDimensions)
     EXPECT_EQ(assigned.N_coefs_per_res.size(), 2);
     EXPECT_DOUBLE_EQ(assigned.N_coefs_per_res[0], 4.0);
     EXPECT_DOUBLE_EQ(assigned.N_coefs_per_res[1], 12.0);
-    EXPECT_EQ(assigned.res_maps.size(), 2);
+    EXPECT_EQ(assigned.wavelet_indices.size(), 2);
     EXPECT_EQ(assigned.Y_mats.size(), 2);
     EXPECT_EQ(assigned.sum_Y_sq.size(), 2);
 }

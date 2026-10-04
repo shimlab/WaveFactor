@@ -75,8 +75,8 @@ TEST(UtilitiesTest, UL)
 
 TEST(UtilitiesTest, SBarLWithContext)
 {
-    SharedProjections sp = compute_shared_projections(mocks::parameters);
-    EXPECT_NEAR(s_bar_L(1, 1, sp, mocks::parameters), mocks::s_bar_L_i_j, 0.001);
+    UpdateContext ctx = make_update_context(mocks::parameters);
+    EXPECT_NEAR(s_bar_L(1, 1, ctx, mocks::parameters), mocks::s_bar_L_i_j, 0.001);
 }
 
 TEST(UtilitiesTest, UBarL)

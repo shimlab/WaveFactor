@@ -61,7 +61,7 @@ LZLUpdateContext make_L_Z_L_update_context(int i, int l, const Parameters &param
         ctx_i_l.dot_Y[j].resize(parameters.mu_L[l][i][j].size());
         for (size_t k = 0; k < ctx_i_l.dot_Y[j].size(); ++k)
         {
-            int p = parameters.res_maps[i].jk_to_p[j][k];
+            int p = parameters.wavelet_indices[i].jk_to_p[j][k];
             ctx_i_l.dot_Y[j][k] = dot_Y_flat(p);
         }
     }
@@ -94,20 +94,20 @@ UpdateLZLResult compute_update_L_Z_L(int i, int j, int k, int l, const LZLUpdate
 
 
 
-SharedProjections compute_shared_projections(const Parameters &parameters)
+UpdateContext make_update_context(const Parameters &parameters)
 {
     int n_res = parameters.n_resolutions;
     int n_factors = parameters.n_factors;
     int n_features = parameters.n_features;
 
-    SharedProjections sp;
-    sp.lambda_bar_L.assign(n_res, std::vector<double>(n_factors, 0.0));
-    sp.phi_L_res.assign(n_res, std::vector<std::vector<double>>(n_factors, std::vector<double>(n_factors, 0.0)));
-    sp.nu_L_res.assign(n_res, std::vector<std::vector<double>>(n_factors, std::vector<double>(n_features, 0.0)));
+    UpdateContext ctx;
+    ctx.lambda_bar_L.assign(n_res, std::vector<double>(n_factors, 0.0));
+    ctx.phi_F.assign(n_res, std::vector<std::vector<double>>(n_factors, std::vector<double>(n_factors, 0.0)));
+    ctx.nu_F.assign(n_res, std::vector<std::vector<double>>(n_factors, std::vector<double>(n_features, 0.0)));
 
     for (int i = 0; i < n_res; ++i)
     {
-        int N_i = parameters.res_maps[i].N_i;
+        int N_i = parameters.wavelet_indices[i].N_i;
         Eigen::MatrixXd Xi_L_mat(N_i, n_factors);
 
         for (int m = 0; m < n_factors; ++m)
@@ -117,24 +117,24 @@ SharedProjections compute_shared_projections(const Parameters &parameters)
             {
                 for (size_t k = 0; k < parameters.mu_L[m][i][j].size(); ++k)
                 {
-                    int p = parameters.res_maps[i].jk_to_p[j][k];
+                    int p = parameters.wavelet_indices[i].jk_to_p[j][k];
                     Xi_L_mat(p, m) = xi_L(i, j, k, m, parameters);
                     sum_lam += lambda_L(i, j, k, m, parameters);
                 }
             }
-            sp.lambda_bar_L[i][m] = sum_lam;
+            ctx.lambda_bar_L[i][m] = sum_lam;
         }
 
         // Fast BLAS Gram matrix: phi_mat = Xi_L_mat^T * Xi_L_mat (K x K)
         Eigen::MatrixXd phi_mat = Xi_L_mat.transpose() * Xi_L_mat;
         for (int m = 0; m < n_factors; ++m)
         {
-            sp.phi_L_res[i][m][m] = 0.0;
+            ctx.phi_F[i][m][m] = 0.0;
             for (int mp = 0; mp < n_factors; ++mp)
             {
                 if (m != mp)
                 {
-                    sp.phi_L_res[i][m][mp] = phi_mat(m, mp);
+                    ctx.phi_F[i][m][mp] = phi_mat(m, mp);
                 }
             }
         }
@@ -145,12 +145,12 @@ SharedProjections compute_shared_projections(const Parameters &parameters)
         {
             for (int g = 0; g < n_features; ++g)
             {
-                sp.nu_L_res[i][m][g] = nu_mat(m, g);
+                ctx.nu_F[i][m][g] = nu_mat(m, g);
             }
         }
     }
 
-    return sp;
+    return ctx;
 }
 
 double compute_update_sigma_squared_F(int i, int j, const Parameters &parameters)
@@ -159,10 +159,10 @@ double compute_update_sigma_squared_F(int i, int j, const Parameters &parameters
     return 1.0 / (1 + u_bar_L_i_j);
 }
 
-UpdateFZFResult compute_update_F_Z_F(int i, int j, const SharedProjections &sp, const Parameters &parameters)
+UpdateFZFResult compute_update_F_Z_F(int i, int j, const UpdateContext &ctx, const Parameters &parameters)
 {
     double update_sigma_squared_F_i_j = compute_update_sigma_squared_F(i, j, parameters);
-    double s_bar_L_i_j = s_bar_L(i, j, sp, parameters);
+    double s_bar_L_i_j = s_bar_L(i, j, ctx, parameters);
     double update_mu_F_i_j = s_bar_L_i_j * update_sigma_squared_F_i_j;
 
     double log_pi_F_i_j = parameters.log_pi_F[i][j];
@@ -206,7 +206,7 @@ double compute_update_alpha_hat_tau(int i, int l, const Parameters &parameters)
     return N_i / 2.0 + alpha_tau_i_l;
 }
 
-double compute_update_beta_hat_tau(int i, int l, const SharedProjections &sp, double precomputed_Y_squared_sum, const Parameters &parameters)
+double compute_update_beta_hat_tau(int i, int l, const UpdateContext &ctx, double precomputed_Y_squared_sum, const Parameters &parameters)
 {
     double beta_tau_i_l = parameters.beta_tau[i][l];
 
@@ -220,13 +220,13 @@ double compute_update_beta_hat_tau(int i, int l, const SharedProjections &sp, do
         double xi_F_m_l = xi_F(m, l, parameters);
         double lambda_F_m_l = lambda_F(m, l, parameters);
 
-        Y_xi_sum += xi_F_m_l * sp.nu_L_res[i][m][l];
-        lambda_sum += lambda_F_m_l * sp.lambda_bar_L[i][m];
+        Y_xi_sum += xi_F_m_l * ctx.nu_F[i][m][l];
+        lambda_sum += lambda_F_m_l * ctx.lambda_bar_L[i][m];
 
         double inner_phi = 0.0;
         for (int mp = 0; mp < n_factors; ++mp)
         {
-            inner_phi += sp.phi_L_res[i][m][mp] * xi_F(mp, l, parameters);
+            inner_phi += ctx.phi_F[i][m][mp] * xi_F(mp, l, parameters);
         }
         phi_sum += xi_F_m_l * inner_phi;
     }
@@ -234,10 +234,10 @@ double compute_update_beta_hat_tau(int i, int l, const SharedProjections &sp, do
     return beta_tau_i_l + 0.5 * (precomputed_Y_squared_sum - 2.0 * Y_xi_sum + lambda_sum + phi_sum);
 }
 
-UpdateTauResult compute_update_tau(int i, int l, const SharedProjections &sp, double precomputed_Y_squared_sum, const Parameters &parameters)
+UpdateTauResult compute_update_tau(int i, int l, const UpdateContext &ctx, double precomputed_Y_squared_sum, const Parameters &parameters)
 {
     double update_alpha_hat_tau_i_l = compute_update_alpha_hat_tau(i, l, parameters);
-    double update_beta_hat_tau_i_l = compute_update_beta_hat_tau(i, l, sp, precomputed_Y_squared_sum, parameters);
+    double update_beta_hat_tau_i_l = compute_update_beta_hat_tau(i, l, ctx, precomputed_Y_squared_sum, parameters);
 
     return {
         update_alpha_hat_tau_i_l,

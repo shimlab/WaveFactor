@@ -36,35 +36,35 @@ TEST(CaviUpdatesTest, ComputeUpdateLZL)
     EXPECT_NEAR(update_L_Z_L.update_log_r_L, mocks::update_log_r_L_ijk_l, 0.001);
 }
 
-TEST(CaviUpdatesTest, ComputeSharedProjections)
+TEST(CaviUpdatesTest, MakeUpdateContext)
 {
-    SharedProjections sp = compute_shared_projections(mocks::parameters);
-    EXPECT_EQ(sp.lambda_bar_L.size(), static_cast<std::size_t>(mocks::parameters.n_resolutions));
-    EXPECT_EQ(sp.phi_L_res.size(), static_cast<std::size_t>(mocks::parameters.n_resolutions));
-    EXPECT_EQ(sp.nu_L_res.size(), static_cast<std::size_t>(mocks::parameters.n_resolutions));
+    UpdateContext ctx = make_update_context(mocks::parameters);
+    EXPECT_EQ(ctx.lambda_bar_L.size(), static_cast<std::size_t>(mocks::parameters.n_resolutions));
+    EXPECT_EQ(ctx.phi_F.size(), static_cast<std::size_t>(mocks::parameters.n_resolutions));
+    EXPECT_EQ(ctx.nu_F.size(), static_cast<std::size_t>(mocks::parameters.n_resolutions));
 
     for (int a = 0; a < mocks::parameters.n_resolutions; ++a)
     {
-        EXPECT_EQ(sp.lambda_bar_L[a].size(), static_cast<std::size_t>(mocks::parameters.n_factors));
-        EXPECT_EQ(sp.phi_L_res[a].size(), static_cast<std::size_t>(mocks::parameters.n_factors));
-        EXPECT_EQ(sp.nu_L_res[a].size(), static_cast<std::size_t>(mocks::parameters.n_factors));
+        EXPECT_EQ(ctx.lambda_bar_L[a].size(), static_cast<std::size_t>(mocks::parameters.n_factors));
+        EXPECT_EQ(ctx.phi_F[a].size(), static_cast<std::size_t>(mocks::parameters.n_factors));
+        EXPECT_EQ(ctx.nu_F[a].size(), static_cast<std::size_t>(mocks::parameters.n_factors));
 
         for (int m = 0; m < mocks::parameters.n_factors; ++m)
         {
-            EXPECT_FALSE(std::isnan(sp.lambda_bar_L[a][m]));
-            EXPECT_EQ(sp.phi_L_res[a][m].size(), static_cast<std::size_t>(mocks::parameters.n_factors));
-            EXPECT_EQ(sp.nu_L_res[a][m].size(), static_cast<std::size_t>(mocks::parameters.n_features));
+            EXPECT_FALSE(std::isnan(ctx.lambda_bar_L[a][m]));
+            EXPECT_EQ(ctx.phi_F[a][m].size(), static_cast<std::size_t>(mocks::parameters.n_factors));
+            EXPECT_EQ(ctx.nu_F[a][m].size(), static_cast<std::size_t>(mocks::parameters.n_features));
 
             // Verify diagonal zeroing and symmetry of Gram matrix
-            EXPECT_EQ(sp.phi_L_res[a][m][m], 0.0);
+            EXPECT_EQ(ctx.phi_F[a][m][m], 0.0);
             for (int mp = 0; mp < mocks::parameters.n_factors; ++mp)
             {
-                EXPECT_FALSE(std::isnan(sp.phi_L_res[a][m][mp]));
-                EXPECT_DOUBLE_EQ(sp.phi_L_res[a][m][mp], sp.phi_L_res[a][mp][m]);
+                EXPECT_FALSE(std::isnan(ctx.phi_F[a][m][mp]));
+                EXPECT_DOUBLE_EQ(ctx.phi_F[a][m][mp], ctx.phi_F[a][mp][m]);
             }
             for (int g = 0; g < mocks::parameters.n_features; ++g)
             {
-                EXPECT_FALSE(std::isnan(sp.nu_L_res[a][m][g]));
+                EXPECT_FALSE(std::isnan(ctx.nu_F[a][m][g]));
             }
         }
     }
@@ -77,8 +77,8 @@ TEST(CaviUpdatesTest, ComputeUpdateSigmaSquaredF)
 
 TEST(CaviUpdatesTest, ComputeUpdateFZF)
 {
-    SharedProjections sp = compute_shared_projections(mocks::parameters);
-    auto update_F_Z_F = compute_update_F_Z_F(1, 1, sp, mocks::parameters);
+    UpdateContext ctx = make_update_context(mocks::parameters);
+    auto update_F_Z_F = compute_update_F_Z_F(1, 1, ctx, mocks::parameters);
     EXPECT_NEAR(update_F_Z_F.update_sigma_squared_F, mocks::update_sigma_squared_F_i_j, 0.001);
     EXPECT_NEAR(update_F_Z_F.update_mu_F, mocks::update_mu_F_i_j, 0.001);
     EXPECT_NEAR(update_F_Z_F.update_log_r_F, mocks::update_log_r_F_i_j, 0.001);
@@ -92,20 +92,20 @@ TEST(CaviUpdatesTest, ComputeUpdateAlphaHatTau)
 
 TEST(CaviUpdatesTest, ComputeUpdateTau)
 {
-    SharedProjections sp = compute_shared_projections(mocks::parameters);
+    UpdateContext ctx = make_update_context(mocks::parameters);
     double sum_Y_sq_0 = mocks::parameters.sum_Y_sq[0][1];
-    EXPECT_NEAR(compute_update_beta_hat_tau(0, 1, sp, sum_Y_sq_0, mocks::parameters), mocks::update_beta_hat_tau_i_l_0, 0.001);
+    EXPECT_NEAR(compute_update_beta_hat_tau(0, 1, ctx, sum_Y_sq_0, mocks::parameters), mocks::update_beta_hat_tau_i_l_0, 0.001);
 
     double sum_Y_sq_1 = mocks::parameters.sum_Y_sq[1][1];
-    EXPECT_NEAR(compute_update_beta_hat_tau(1, 1, sp, sum_Y_sq_1, mocks::parameters), mocks::update_beta_hat_tau_i_l_1, 0.001);
+    EXPECT_NEAR(compute_update_beta_hat_tau(1, 1, ctx, sum_Y_sq_1, mocks::parameters), mocks::update_beta_hat_tau_i_l_1, 0.001);
 
-    auto update_tau = compute_update_tau(1, 1, sp, sum_Y_sq_1, mocks::parameters);
+    auto update_tau = compute_update_tau(1, 1, ctx, sum_Y_sq_1, mocks::parameters);
     EXPECT_NEAR(update_tau.update_alpha_hat_tau, mocks::update_alpha_hat_tau_i_l_1, 0.001);
     EXPECT_NEAR(update_tau.update_beta_hat_tau, mocks::update_beta_hat_tau_i_l_1, 0.001);
 
     // Verify defensive NaN poisoning: passing signaling NaN for sum_Y_sq must propagate NaN
     double nan_poison = std::numeric_limits<double>::signaling_NaN();
-    EXPECT_TRUE(std::isnan(compute_update_beta_hat_tau(1, 1, sp, nan_poison, mocks::parameters)));
+    EXPECT_TRUE(std::isnan(compute_update_beta_hat_tau(1, 1, ctx, nan_poison, mocks::parameters)));
 }
 
 TEST(CaviUpdatesTest, ComputeUpdateAlphaHatT)

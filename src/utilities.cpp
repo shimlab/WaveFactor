@@ -40,7 +40,7 @@ double u_L(int a, int b, int c, int i, int j, const Parameters &parameters)
     return lambda_L_abc_i * gamma_tau_a_j;
 }
 
-double s_bar_L(int i, int j, const SharedProjections &sp, const Parameters &parameters)
+double s_bar_L(int i, int j, const UpdateContext &ctx, const Parameters &parameters)
 {
     double s_sum = 0.0;
     for (int a = 0; a < parameters.n_resolutions; ++a)
@@ -48,9 +48,9 @@ double s_bar_L(int i, int j, const SharedProjections &sp, const Parameters &para
         double dot_phi = 0.0;
         for (int m = 0; m < parameters.n_factors; ++m)
         {
-            dot_phi += sp.phi_L_res[a][i][m] * xi_F(m, j, parameters);
+            dot_phi += ctx.phi_F[a][i][m] * xi_F(m, j, parameters);
         }
-        s_sum += gamma_tau(a, j, parameters) * (sp.nu_L_res[a][i][j] - dot_phi);
+        s_sum += gamma_tau(a, j, parameters) * (ctx.nu_F[a][i][j] - dot_phi);
     }
     return s_sum;
 }

@@ -67,13 +67,13 @@ TEST(CaviElboTest, ComputeElbo)
 TEST(CaviElboTest, ComputeElboTauUpdatedParity)
 {
     Parameters params = mocks::parameters;
-    SharedProjections sp = compute_shared_projections(params);
+    UpdateContext ctx = make_update_context(params);
     for (int i = 0; i < params.n_resolutions; ++i)
     {
         for (int l = 0; l < params.n_features; ++l)
         {
             double sum_Y_sq = params.sum_Y_sq[i][l];
-            params.beta_hat_tau[i][l] = compute_update_beta_hat_tau(i, l, sp, sum_Y_sq, params);
+            params.beta_hat_tau[i][l] = compute_update_beta_hat_tau(i, l, ctx, sum_Y_sq, params);
             params.alpha_hat_tau[i][l] = compute_update_alpha_hat_tau(i, l, params);
         }
     }
