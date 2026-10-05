@@ -71,7 +71,7 @@ def benchmark_single(grid_side: int, n_genes: int, K: int, D: int, iters: int = 
 
 def run_all_benchmarks():
     # Baseline configuration
-    baseline = {"grid_side": 64, "n_genes": 250, "K": 5, "D": 10, "iters": 100}
+    baseline = {"grid_side": 64, "n_genes": 250, "K": 5, "D": 3, "iters": 100}
 
     # Sweep values
     sweep_grid = [8, 16, 32, 64, 128, 256, 512]
@@ -157,13 +157,8 @@ def run_all_benchmarks():
     axes[3].plot(k_dense, ref_scale_k * k_dense, "--", color="crimson", label=r"Ref: Linear $O(K)$")
     style_ax(axes[3], "Scaling vs. Latent Factors (K)", "K (n_factors)")
 
-    # 5. D length scales (Linear reference: O(D))
-    base_idx_d = sweep_d.index(baseline["D"])
-    ref_scale_d = times_d[base_idx_d] / baseline["D"]
-    d_dense = np.linspace(sweep_d[0], sweep_d[-1], 200)
-
+    # 5. D length scales (Observed only)
     axes[4].plot(sweep_d, times_d, "o-", color="#8c564b", label="Observed", lw=2)
-    axes[4].plot(d_dense, ref_scale_d * d_dense, "--", color="crimson", label=r"Ref: Linear $O(D)$")
     style_ax(axes[4], "Scaling vs. Length Scales (D)", "D (n_length_scales)")
 
     # Hide unused 6th subplot
