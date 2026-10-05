@@ -20,62 +20,64 @@ double compute_update_sigma_squared_L(int i, int j, int k, int l, const Paramete
 
 
 
-LZLUpdateContext make_L_Z_L_update_context(int i, int l, const Parameters &parameters)
+LZLUpdateContextForResolution make_L_Z_L_update_context_for_resolution(int i, const Parameters &parameters)
 {
-    LZLUpdateContext ctx_i_l;
-    ctx_i_l.update_sigma_squared_L = compute_update_sigma_squared_L(i, 0, 0, l, parameters);
-    ctx_i_l.log_scaling_factor = 0.5 * (std::log(2.0) + std::log(M_PI) + std::log(ctx_i_l.update_sigma_squared_L));
-    ctx_i_l.log_bernoulli_true = parameters.log_pi_L[i];
-    ctx_i_l.log_bernoulli_false = std::log(1.0 - std::exp(parameters.log_pi_L[i]));
-    ctx_i_l.theta_t_i_l = theta_t(i, l, parameters);
+    int n_factors = parameters.n_factors;
+    int n_features = parameters.n_features;
 
-    ctx_i_l.nu_L.assign(parameters.n_features, std::numeric_limits<double>::signaling_NaN());
-    for (int d = 0; d < parameters.n_features; ++d)
-    {
-        ctx_i_l.nu_L[d] = gamma_tau(i, d, parameters) * xi_F(l, d, parameters);
+    Eigen::MatrixXd Xi_F_mat = compute_Xi_F_mat(parameters);
+
+    Eigen::VectorXd gamma_tau_i_vec(n_features);
+    for (int d = 0; d < n_features; ++d) {
+        gamma_tau_i_vec(d) = gamma_tau(i, d, parameters);
     }
 
-    ctx_i_l.phi_L.assign(parameters.n_factors, std::numeric_limits<double>::signaling_NaN());
-    for (int m = 0; m < parameters.n_factors; ++m)
-    {
-        if (m == l)
-        {
-            ctx_i_l.phi_L[m] = 0.0;
-            continue;
-        }
-        double sum_m = 0.0;
-        for (int d = 0; d < parameters.n_features; ++d)
-        {
-            sum_m += ctx_i_l.nu_L[d] * xi_F(m, d, parameters);
-        }
-        ctx_i_l.phi_L[m] = sum_m;
-    }
+    Eigen::MatrixXd nu_L_i_mat_t = gamma_tau_i_vec.asDiagonal() * Xi_F_mat.transpose();
 
-    Eigen::Map<const Eigen::VectorXd> nu_vec(ctx_i_l.nu_L.data(), parameters.n_features);
-    Eigen::VectorXd dot_Y_flat = parameters.Y_mats[i] * nu_vec;
-
-    ctx_i_l.dot_Y.resize(parameters.mu_L[l][i].size());
-    for (size_t j = 0; j < ctx_i_l.dot_Y.size(); ++j)
-    {
-        ctx_i_l.dot_Y[j].resize(parameters.mu_L[l][i][j].size());
-        for (size_t k = 0; k < ctx_i_l.dot_Y[j].size(); ++k)
-        {
-            int p = parameters.wavelet_indices[i].subband_to_flat_index[j][k];
-            ctx_i_l.dot_Y[j][k] = dot_Y_flat(p);
-        }
-    }
-
-    return ctx_i_l;
+    LZLUpdateContextForResolution ctx_resolution_i;
+    ctx_resolution_i.phi_L_mat = Xi_F_mat * nu_L_i_mat_t;
+    ctx_resolution_i.phi_L_mat.diagonal().setZero();
+    ctx_resolution_i.dot_Y_mat = parameters.Y_mats[i] * nu_L_i_mat_t;
+    return ctx_resolution_i;
 }
 
-UpdateLZLResult compute_update_L_Z_L(int i, int j, int k, int l, const LZLUpdateContext &ctx_i_l, const Parameters &parameters)
+LZLUpdateContextForResolutionFactor make_L_Z_L_update_context_for_resolution_factor(int i, int l, const LZLUpdateContextForResolution &ctx_resolution_i, const Parameters &parameters)
 {
-    double s_bar_F_ijk_l = s_bar_F(i, j, k, l, ctx_i_l, parameters);
-    double update_mu_L_ijk_l = s_bar_F_ijk_l * ctx_i_l.update_sigma_squared_L;
+    LZLUpdateContextForResolutionFactor ctx_resolution_factor_i_l;
+    ctx_resolution_factor_i_l.update_sigma_squared_L = compute_update_sigma_squared_L(i, 0, 0, l, parameters);
+    ctx_resolution_factor_i_l.log_scaling_factor = 0.5 * (std::log(2.0) + std::log(M_PI) + std::log(ctx_resolution_factor_i_l.update_sigma_squared_L));
+    ctx_resolution_factor_i_l.log_bernoulli_true = parameters.log_pi_L[i];
+    ctx_resolution_factor_i_l.log_bernoulli_false = std::log(1.0 - std::exp(parameters.log_pi_L[i]));
+    ctx_resolution_factor_i_l.theta_t_i_l = theta_t(i, l, parameters);
 
-    double relative_true_log_prob = ctx_i_l.log_bernoulli_true + ctx_i_l.log_scaling_factor +
-        0.5 * (ctx_i_l.theta_t_i_l + (update_mu_L_ijk_l * update_mu_L_ijk_l) / ctx_i_l.update_sigma_squared_L);
-    double relative_false_log_prob = ctx_i_l.log_bernoulli_false;
+    ctx_resolution_factor_i_l.phi_L.assign(parameters.n_factors, std::numeric_limits<double>::signaling_NaN());
+    for (int m = 0; m < parameters.n_factors; ++m)
+    {
+        ctx_resolution_factor_i_l.phi_L[m] = ctx_resolution_i.phi_L_mat(m, l);
+    }
+
+    ctx_resolution_factor_i_l.dot_Y.resize(parameters.mu_L[l][i].size());
+    for (size_t j = 0; j < ctx_resolution_factor_i_l.dot_Y.size(); ++j)
+    {
+        ctx_resolution_factor_i_l.dot_Y[j].resize(parameters.mu_L[l][i][j].size());
+        for (size_t k = 0; k < ctx_resolution_factor_i_l.dot_Y[j].size(); ++k)
+        {
+            int p = parameters.wavelet_indices[i].subband_to_flat_index[j][k];
+            ctx_resolution_factor_i_l.dot_Y[j][k] = ctx_resolution_i.dot_Y_mat(p, l);
+        }
+    }
+
+    return ctx_resolution_factor_i_l;
+}
+
+UpdateLZLResult compute_update_L_Z_L(int i, int j, int k, int l, const LZLUpdateContextForResolutionFactor &ctx_resolution_factor_i_l, const Parameters &parameters)
+{
+    double s_bar_F_ijk_l = s_bar_F(i, j, k, l, ctx_resolution_factor_i_l, parameters);
+    double update_mu_L_ijk_l = s_bar_F_ijk_l * ctx_resolution_factor_i_l.update_sigma_squared_L;
+
+    double relative_true_log_prob = ctx_resolution_factor_i_l.log_bernoulli_true + ctx_resolution_factor_i_l.log_scaling_factor +
+        0.5 * (ctx_resolution_factor_i_l.theta_t_i_l + (update_mu_L_ijk_l * update_mu_L_ijk_l) / ctx_resolution_factor_i_l.update_sigma_squared_L);
+    double relative_false_log_prob = ctx_resolution_factor_i_l.log_bernoulli_false;
 
     double true_log_prob = relative_true_log_prob - sum_log(relative_true_log_prob, relative_false_log_prob);
     double false_log_prob = relative_false_log_prob - sum_log(relative_true_log_prob, relative_false_log_prob);
@@ -86,7 +88,7 @@ UpdateLZLResult compute_update_L_Z_L(int i, int j, int k, int l, const LZLUpdate
     double update_log_r_L_ijk_l = incremented_true_log_prob - sum_log(incremented_true_log_prob, incremented_false_log_prob);
 
     return {
-        ctx_i_l.update_sigma_squared_L,
+        ctx_resolution_factor_i_l.update_sigma_squared_L,
         update_mu_L_ijk_l,
         update_log_r_L_ijk_l};
 }
@@ -160,14 +162,7 @@ FZFUpdateContextForFactor make_F_Z_F_update_context_for_factor(int i, const FZFT
     ctx_factor_i.s_bar_L.assign(n_features, std::numeric_limits<double>::signaling_NaN());
     ctx_factor_i.sigma_squared_F.assign(n_features, std::numeric_limits<double>::signaling_NaN());
 
-    Eigen::MatrixXd Xi_F_mat(n_factors, n_features);
-    for (int m = 0; m < n_factors; ++m)
-    {
-        for (int g = 0; g < n_features; ++g)
-        {
-            Xi_F_mat(m, g) = xi_F(m, g, parameters);
-        }
-    }
+    Eigen::MatrixXd Xi_F_mat = compute_Xi_F_mat(parameters);
 
     Eigen::RowVectorXd s_bar_i = Eigen::RowVectorXd::Zero(n_features);
     for (int a = 0; a < n_res; ++a)

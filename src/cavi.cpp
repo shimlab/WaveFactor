@@ -122,16 +122,17 @@ CaviResult cavi(Parameters &parameters, int max_iterations, double relative_elbo
     while (num_iterations_completed < max_iterations)
     {
         // For L_ijk_l, Z_L_ijk_l related updates
-        for (int l = 0; l < n_factors; ++l)
+        for (int i = 0; i < n_resolutions; ++i)
         {
-            for (int i = 0; i < n_resolutions; ++i)
+            LZLUpdateContextForResolution ctx_resolution_i = make_L_Z_L_update_context_for_resolution(i, new_parameters);
+            for (int l = 0; l < n_factors; ++l)
             {
-                LZLUpdateContext ctx_i_l = make_L_Z_L_update_context(i, l, new_parameters);
+                LZLUpdateContextForResolutionFactor ctx_resolution_factor_i_l = make_L_Z_L_update_context_for_resolution_factor(i, l, ctx_resolution_i, new_parameters);
                 for (std::size_t j = 0; j < new_parameters.mu_L[l][i].size(); ++j)
                 {
                     for (std::size_t k = 0; k < new_parameters.mu_L[l][i][j].size(); ++k)
                     {
-                        UpdateLZLResult update_L_Z_L_ijk_l = compute_update_L_Z_L(i, j, k, l, ctx_i_l, new_parameters);
+                        UpdateLZLResult update_L_Z_L_ijk_l = compute_update_L_Z_L(i, j, k, l, ctx_resolution_factor_i_l, new_parameters);
                         new_parameters.sigma_squared_L[l][i][j][k] = update_L_Z_L_ijk_l.update_sigma_squared_L;
                         new_parameters.mu_L[l][i][j][k] = update_L_Z_L_ijk_l.update_mu_L;
                         new_parameters.log_r_L[l][i][j][k] = update_L_Z_L_ijk_l.update_log_r_L;

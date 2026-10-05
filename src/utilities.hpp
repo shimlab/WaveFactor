@@ -5,7 +5,7 @@
 #include "parameters.hpp"
 #include <unsupported/Eigen/SpecialFunctions>
 
-struct LZLUpdateContext;
+struct LZLUpdateContextForResolutionFactor;
 struct FZFTauUpdateContext;
 
 inline double sum_log(double log_a, double log_b)
@@ -80,7 +80,8 @@ inline double theta_tau(int i, int l, const Parameters &parameters)
 }
 
 double u_F(int i, int l, int d, const Parameters &parameters);
-double s_bar_F(int i, int j, int k, int l, const LZLUpdateContext &ctx_i_l, const Parameters &parameters);
+double s_bar_F(int i, int j, int k, int l, const LZLUpdateContextForResolutionFactor &ctx_resolution_factor_i_l, const Parameters &parameters);
 double u_bar_F(int i, int l, const Parameters &parameters);
+Eigen::MatrixXd compute_Xi_F_mat(const Parameters &parameters);
 
 #endif /*UTILITIES_HPP_INCLUDED*/
