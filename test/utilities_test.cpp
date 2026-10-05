@@ -59,8 +59,9 @@ TEST(UtilitiesTest, UF)
 
 TEST(UtilitiesTest, SBarFWithContext)
 {
-    LZLUpdateContext ctx_i_l = make_L_Z_L_update_context(1, 1, mocks::parameters);
-    EXPECT_NEAR(s_bar_F(1, 1, 1, 1, ctx_i_l, mocks::parameters), mocks::s_bar_F_ijk_l, 0.001);
+    LZLUpdateContextForResolution ctx_resolution_1 = make_L_Z_L_update_context_for_resolution(1, mocks::parameters);
+    LZLUpdateContextForResolutionFactor ctx_resolution_factor_i_l = make_L_Z_L_update_context_for_resolution_factor(1, 1, ctx_resolution_1, mocks::parameters);
+    EXPECT_NEAR(s_bar_F(1, 1, 1, 1, ctx_resolution_factor_i_l, mocks::parameters), mocks::s_bar_F_ijk_l, 0.001);
 }
 
 TEST(UtilitiesTest, UBarF)
@@ -68,18 +69,21 @@ TEST(UtilitiesTest, UBarF)
     EXPECT_NEAR(u_bar_F(1, 1, mocks::parameters), mocks::u_bar_F_i_l, 0.001);
 }
 
-TEST(UtilitiesTest, UL)
+TEST(UtilitiesTest, ComputeXiFMat)
 {
-    EXPECT_NEAR(u_L(1, 1, 1, 1, 1, mocks::parameters), mocks::u_L_abc_i_j, 0.001);
-}
-
-TEST(UtilitiesTest, SBarLWithContext)
-{
-    FZFTauUpdateContext ctx = make_F_Z_F_tau_update_context(mocks::parameters);
-    EXPECT_NEAR(s_bar_L(1, 1, ctx, mocks::parameters), mocks::s_bar_L_i_j, 0.001);
-}
-
-TEST(UtilitiesTest, UBarL)
-{
-    EXPECT_NEAR(u_bar_L(1, 1, mocks::parameters), mocks::u_bar_L_i_j, 0.001);
+    Parameters asymmetric_params = mocks::parameters;
+    asymmetric_params.mu_F = {{1, 2, 3}, {4, 5, 6}};
+    for (const Parameters *params : {&mocks::parameters, &asymmetric_params})
+    {
+        Eigen::MatrixXd Xi_F_mat = compute_Xi_F_mat(*params);
+        EXPECT_EQ(Xi_F_mat.rows(), params->n_factors);
+        EXPECT_EQ(Xi_F_mat.cols(), params->n_features);
+        for (int m = 0; m < params->n_factors; ++m)
+        {
+            for (int g = 0; g < params->n_features; ++g)
+            {
+                EXPECT_DOUBLE_EQ(Xi_F_mat(m, g), xi_F(m, g, *params));
+            }
+        }
+    }
 }

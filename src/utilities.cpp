@@ -9,15 +9,15 @@ double u_F(int i, int l, int d, const Parameters &parameters)
     return lambda_F_l_d * gamma_tau_i_d;
 }
 
-double s_bar_F(int i, int j, int k, int l, const LZLUpdateContext &ctx_i_l, const Parameters &parameters)
+double s_bar_F(int i, int j, int k, int l, const LZLUpdateContextForResolutionFactor &ctx_resolution_factor_i_l, const Parameters &parameters)
 {
-    double dot_Y = ctx_i_l.dot_Y[j][k];
+    double dot_Y = ctx_resolution_factor_i_l.dot_Y[j][k];
 
     double dot_phi = 0.0;
     for (int m = 0; m < parameters.n_factors; ++m)
     {
         if (m == l) continue;
-        dot_phi += ctx_i_l.phi_L[m] * xi_L(i, j, k, m, parameters);
+        dot_phi += ctx_resolution_factor_i_l.phi_L[m] * xi_L(i, j, k, m, parameters);
     }
 
     return dot_Y - dot_phi;
@@ -33,42 +33,15 @@ double u_bar_F(int i, int l, const Parameters &parameters)
     return u_sum;
 }
 
-double u_L(int a, int b, int c, int i, int j, const Parameters &parameters)
+Eigen::MatrixXd compute_Xi_F_mat(const Parameters &parameters)
 {
-    double lambda_L_abc_i = lambda_L(a, b, c, i, parameters);
-    double gamma_tau_a_j = gamma_tau(a, j, parameters);
-    return lambda_L_abc_i * gamma_tau_a_j;
-}
-
-double s_bar_L(int i, int j, const FZFTauUpdateContext &ctx, const Parameters &parameters)
-{
-    double s_sum = 0.0;
-    for (int a = 0; a < parameters.n_resolutions; ++a)
+    Eigen::MatrixXd Xi_F_mat(parameters.n_factors, parameters.n_features);
+    for (int m = 0; m < parameters.n_factors; ++m)
     {
-        double dot_phi = 0.0;
-        for (int m = 0; m < parameters.n_factors; ++m)
+        for (int g = 0; g < parameters.n_features; ++g)
         {
-            dot_phi += ctx.phi_F[a][i][m] * xi_F(m, j, parameters);
-        }
-        s_sum += gamma_tau(a, j, parameters) * (ctx.nu_F[a][i][j] - dot_phi);
-    }
-    return s_sum;
-}
-
-double u_bar_L(int i, int j, const Parameters &parameters)
-{
-    double u_sum = 0.0;
-    for (int a = 0; a < parameters.n_resolutions; ++a)
-    {
-        int max_b = parameters.mu_L[0][a].size();
-        for (int b = 0; b < max_b; ++b)
-        {
-            int max_c = parameters.mu_L[0][a][b].size();
-            for (int c = 0; c < max_c; ++c)
-            {
-                u_sum += u_L(a, b, c, i, j, parameters);
-            }
+            Xi_F_mat(m, g) = xi_F(m, g, parameters);
         }
     }
-    return u_sum;
+    return Xi_F_mat;
 }
