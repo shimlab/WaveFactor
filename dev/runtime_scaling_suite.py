@@ -74,7 +74,7 @@ def run_all_benchmarks():
     baseline = {"grid_side": 64, "n_genes": 250, "K": 5, "D": 3, "iters": 10}
 
     # Sweep values
-    sweep_grid = [8, 16, 32, 64, 128, 256, 512, 512]
+    sweep_grid = [8, 16, 32, 64, 128, 256, 512]
     sweep_genes = [250, 500, 750, 1000, 1250, 1500, 1750, 2000]
     sweep_k = [5, 10, 15, 20, 25, 30, 35, 40]
     sweep_d = [2, 3, 4, 5, 6]
