@@ -71,7 +71,7 @@ def benchmark_single(grid_side: int, n_genes: int, K: int, D: int, iters: int = 
 
 def run_all_benchmarks():
     # Baseline configuration
-    baseline = {"grid_side": 64, "n_genes": 250, "K": 5, "D": 3, "iters": 10}
+    baseline = {"grid_side": 64, "n_genes": 250, "K": 5, "D": 10, "iters": 100}
 
     # Sweep values
     sweep_grid = [8, 16, 32, 64, 128, 256, 512]
