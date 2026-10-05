@@ -1,0 +1,26 @@
+site_name: WaveFactor
+site_description: Bayesian factor modeling for spatial transcriptomics
+repo_url: https://github.com/shimlab/WaveFactor
+repo_name: shimlab/WaveFactor
+
+theme:
+  name: material
+
+markdown_extensions:
+  - admonition
+  - pymdownx.superfences
+
+nav:
+  - Overview: index.md
+  - Installation: installation.md
+  - Data Input & Output: input_output.md
+  - Getting Started: getting_started.md
+
+extra:
+  social:
+- icon: fontawesome/brands/github
+      link: https://github.com/shimlab/WaveFactor
+      name: GitHub Repository
+    - icon: fontawesome/solid/robot
+      link: llms.md
+      name: LLM-friendly Documentation (llms.md)
