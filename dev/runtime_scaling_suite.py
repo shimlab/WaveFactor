@@ -3,10 +3,10 @@ WaveFactor scaling benchmark & Matplotlib visualization script.
 
 Sweeps:
   1. grid_side: [8, 16, 32, 64, 128, 256, 512] (vs. quadratic ref)
-  2. n_spots (grid_side^2): [8^2, ..., 512^2]        (vs. linear ref)
-  3. n_genes:   [250, 500, 750, 1000, 1250, 1500, 1750, 2000] (vs. linear ref)
-  4. K:         [5, 10, 15, 20, 25, 30, 35, 40]       (vs. linear ref)
-  5. D:         [2, 3, 4, 5, 6]                        (vs. linear ref)
+  2. n_spots (grid_side^2): [8^2, ..., 512^2]
+  3. n_genes:   [250, 500, 750, 1000, 1250, 1500, 1750, 2000]
+  4. K:         [5, 10, 15, 20, 25, 30, 35, 40]
+  5. D:         [2, 3, 4, 5, 6]
 """
 
 import os
@@ -114,52 +114,38 @@ def run_all_benchmarks():
     fig, axes = plt.subplots(2, 3, figsize=(18, 10))
     axes = axes.flatten()
 
-    def style_ax(ax, title, xlabel, ylabel="Time per Iteration [s] (excl. Iter 1)"):
+    def style_ax(ax, title, xlabel, ylabel="Time per Iteration [s] (excl. Iter 1)", show_legend=False):
         ax.set_title(title, fontsize=12, fontweight="bold")
         ax.set_xlabel(xlabel, fontsize=10)
         ax.set_ylabel(ylabel, fontsize=10)
         ax.grid(True, linestyle="--", alpha=0.6)
-        ax.legend(frameon=True)
+        if show_legend:
+            ax.legend(frameon=True)
 
-    # 1. grid_side (Quadratic reference: O(N^2))
+    # 1. grid_side (Quadratic reference: O(N^2)) retained
     base_idx = sweep_grid.index(baseline["grid_side"])
     ref_scale_gs = times_grid[base_idx] / (baseline["grid_side"] ** 2)
     grid_dense = np.linspace(sweep_grid[0], sweep_grid[-1], 200)
 
     axes[0].plot(sweep_grid, times_grid, "o-", color="#1f77b4", label="Observed", lw=2)
     axes[0].plot(grid_dense, ref_scale_gs * (grid_dense ** 2), "--", color="crimson", label=r"Ref: Quadratic $O(\mathrm{grid}^2)$")
-    style_ax(axes[0], "Scaling vs. Grid Side Length", "grid_side")
+    style_ax(axes[0], "Scaling vs. Grid Side Length", "grid_side", show_legend=True)
 
-    # 2. grid_side * grid_side (Linear reference: O(Spots))
+    # 2. grid_side * grid_side (Observed only)
     spots = [gs * gs for gs in sweep_grid]
-    base_spots = baseline["grid_side"] ** 2
-    ref_scale_spots = times_grid[base_idx] / base_spots
-    spots_dense = np.linspace(spots[0], spots[-1], 200)
-
-    axes[1].plot(spots, times_grid, "s-", color="#2ca02c", label="Observed", lw=2)
-    axes[1].plot(spots_dense, ref_scale_spots * spots_dense, "--", color="crimson", label=r"Ref: Linear $O(\mathrm{spots})$")
+    axes[1].plot(spots, times_grid, "s-", color="#2ca02c", lw=2)
     style_ax(axes[1], "Scaling vs. Total Spots (grid_side²)", "n_spots = grid_side²")
 
-    # 3. n_genes (Linear reference: O(G))
-    base_idx_g = sweep_genes.index(baseline["n_genes"])
-    ref_scale_g = times_genes[base_idx_g] / baseline["n_genes"]
-    genes_dense = np.linspace(sweep_genes[0], sweep_genes[-1], 200)
-
-    axes[2].plot(sweep_genes, times_genes, "o-", color="#ff7f0e", label="Observed", lw=2)
-    axes[2].plot(genes_dense, ref_scale_g * genes_dense, "--", color="crimson", label=r"Ref: Linear $O(n\_genes)$")
+    # 3. n_genes (Observed only)
+    axes[2].plot(sweep_genes, times_genes, "o-", color="#ff7f0e", lw=2)
     style_ax(axes[2], "Scaling vs. Number of Genes", "n_genes")
 
-    # 4. K factors (Linear reference: O(K))
-    base_idx_k = sweep_k.index(baseline["K"])
-    ref_scale_k = times_k[base_idx_k] / baseline["K"]
-    k_dense = np.linspace(sweep_k[0], sweep_k[-1], 200)
-
-    axes[3].plot(sweep_k, times_k, "o-", color="#9467bd", label="Observed", lw=2)
-    axes[3].plot(k_dense, ref_scale_k * k_dense, "--", color="crimson", label=r"Ref: Linear $O(K)$")
+    # 4. K factors (Observed only)
+    axes[3].plot(sweep_k, times_k, "o-", color="#9467bd", lw=2)
     style_ax(axes[3], "Scaling vs. Latent Factors (K)", "K (n_factors)")
 
     # 5. D length scales (Observed only)
-    axes[4].plot(sweep_d, times_d, "o-", color="#8c564b", label="Observed", lw=2)
+    axes[4].plot(sweep_d, times_d, "o-", color="#8c564b", lw=2)
     style_ax(axes[4], "Scaling vs. Length Scales (D)", "D (n_length_scales)")
 
     # Hide unused 6th subplot
@@ -170,6 +156,7 @@ def run_all_benchmarks():
     output_path = os.path.join(SCRIPT_DIR, "wavefactor_scaling_benchmarks.png")
     plt.savefig(output_path, dpi=300)
     print(f"\nSaved plots to {output_path}")
+
 
 if __name__ == "__main__":
     run_all_benchmarks()
