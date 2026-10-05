@@ -30,7 +30,7 @@ jobs:
 
       - name: Build site and generate llms.md
         run: |
-          uv run --with mkdocs-material mkdocs build
+          uv run --no-project --with mkdocs-material mkdocs build
           for f in $(find docs -name '*.md' | sort); do
             cat "$f"
             echo -e "\n\n---\n"
