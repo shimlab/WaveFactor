@@ -18,7 +18,7 @@ nav:
 
 extra:
   social:
-- icon: fontawesome/brands/github
+    - icon: fontawesome/brands/github
       link: https://github.com/shimlab/WaveFactor
       name: GitHub Repository
     - icon: fontawesome/solid/robot
