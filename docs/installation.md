@@ -56,7 +56,7 @@ Deactivate the virtual environment by:
 deactivate
 ```
 
-To completely delete the installation, just remove the `wavefactor-venv/` folder:
+After deactivation, to completely delete the installation, just remove the `wavefactor-venv/` folder:
 
 ```bash
 rm -rf wavefactor-venv
