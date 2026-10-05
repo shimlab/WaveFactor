@@ -461,3 +461,6 @@ FodyWeavers.xsd
 
 # JetBrains Rider
 *.sln.iml
+
+# venv installation artifacts
+*.egg-info/
