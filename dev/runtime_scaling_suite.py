@@ -16,6 +16,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 # Ensure repository root is on sys.path
+SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 REPO_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 if REPO_ROOT not in sys.path:
     sys.path.insert(0, REPO_ROOT)
@@ -166,8 +167,9 @@ def run_all_benchmarks():
 
     fig.suptitle("WaveFactor Computational Scaling per Iteration (Excl. Iteration 1)", fontsize=15, fontweight="bold")
     plt.tight_layout()
-    plt.savefig("wavefactor_scaling_benchmarks.png", dpi=300)
-    print("\nSaved plots to wavefactor_scaling_benchmarks.png")
+    output_path = os.path.join(SCRIPT_DIR, "wavefactor_scaling_benchmarks.png")
+    plt.savefig(output_path, dpi=300)
+    print(f"\nSaved plots to {output_path}")
 
 if __name__ == "__main__":
     run_all_benchmarks()
