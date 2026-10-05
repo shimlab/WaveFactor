@@ -30,6 +30,8 @@ source wavefactor-venv/bin/activate
 pip install .
 ```
 
+> **Warning** if installing into multiple environments or reinstalling, we recommend deleting the `build` folder created after every installation before starting a new installation so as to avoid potential conflicts with installation artifacts.
+
 ---
 
 ## 3. (Optional) Check Installation Succeeded
