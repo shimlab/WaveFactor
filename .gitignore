@@ -6,7 +6,6 @@
 .Rproj.user/
 /.temp
 scratch/
-benchmarks/
 *venv*/
 .venv/
 *.exe
