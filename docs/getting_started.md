@@ -8,7 +8,9 @@ WaveFactor includes a ready-to-run simulation example that creates a small spati
 
 ## Run the Example
 
-Make sure your environment is activated (`source wavefactor-venv/bin/activate`), then run:
+First, follow **[Installation Guide](installation.md)** to install WaveFactor into a virtual environment.
+
+Then run the simulation example:
 
 ```bash
 python examples/getting_started/run_analysis.py
