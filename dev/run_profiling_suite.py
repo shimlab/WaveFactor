@@ -16,7 +16,7 @@ from wavefactor.engine import init_parameters, build_parameters_cpp, _get_cpp_ba
 cpp = _get_cpp_backend()
 
 
-def run_tier(name: str, grid_side: int, n_genes: int, K: int, D: int, iters: int = 10, n_iter1_runs: int = 10):
+def run_tier(name: str, grid_side: int, n_genes: int, K: int, D: int, iters: int = 10, n_iter1_runs: int = 3):
     n_spots = grid_side * grid_side
     print(f"--- {name}: {n_spots} spots ({grid_side}x{grid_side}), {n_genes} genes, K={K}, D={D} ---")
 
