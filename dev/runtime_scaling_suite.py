@@ -173,8 +173,6 @@ def run_all_benchmarks():
     plt.tight_layout()
     plt.savefig("wavefactor_scaling_benchmarks.png", dpi=300)
     print("\nSaved plots to wavefactor_scaling_benchmarks.png")
-    plt.show()
-
 
 if __name__ == "__main__":
     run_all_benchmarks()
