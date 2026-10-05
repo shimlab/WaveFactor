@@ -32,7 +32,7 @@ pip install .
 
 ---
 
-## 3. Quick Check
+## 3. (Optional) Check Installation Succeeded
 
 Check that the installation succeeded:
 
@@ -40,7 +40,7 @@ Check that the installation succeeded:
 python -c "import wavefactor; print('WaveFactor installed successfully')"
 ```
 
-To run all tests:
+Run all tests (these should all pass if installation succeeded):
 
 ```bash
 python tests/run_all_tests.py
@@ -48,14 +48,16 @@ python tests/run_all_tests.py
 
 ---
 
-## 4. Deactivate or Remove
+## 4. (Optional) Deactivate or Remove
 
-When you are done:
+Deactivate the virtual environment by:
+
 ```bash
 deactivate
 ```
 
 To completely delete the installation, just remove the `wavefactor-venv/` folder:
+
 ```bash
 rm -rf wavefactor-venv
 ```
