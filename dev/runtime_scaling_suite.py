@@ -2,8 +2,8 @@
 WaveFactor scaling benchmark & Matplotlib visualization script.
 
 Sweeps:
-  1. grid_side: [8, 16, 32, 64, 128, 256, 512, 1024] (vs. quadratic ref)
-  2. n_spots (grid_side^2): [8^2, ..., 1024^2]        (vs. linear ref)
+  1. grid_side: [8, 16, 32, 64, 128, 256, 512] (vs. quadratic ref)
+  2. n_spots (grid_side^2): [8^2, ..., 512^2]        (vs. linear ref)
   3. n_genes:   [250, 500, 750, 1000, 1250, 1500, 1750, 2000] (vs. linear ref)
   4. K:         [5, 10, 15, 20, 25, 30, 35, 40]       (vs. linear ref)
   5. D:         [2, 3, 4, 5, 6]                        (vs. linear ref)
@@ -74,7 +74,7 @@ def run_all_benchmarks():
     baseline = {"grid_side": 64, "n_genes": 250, "K": 5, "D": 3, "iters": 10}
 
     # Sweep values
-    sweep_grid = [8, 16, 32, 64, 128, 256, 512, 1024]
+    sweep_grid = [8, 16, 32, 64, 128, 256, 512, 512]
     sweep_genes = [250, 500, 750, 1000, 1250, 1500, 1750, 2000]
     sweep_k = [5, 10, 15, 20, 25, 30, 35, 40]
     sweep_d = [2, 3, 4, 5, 6]
