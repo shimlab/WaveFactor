@@ -19,8 +19,8 @@ Using an isolated virtual environment prevents conflicts with other Python packa
 
 ```bash
 # 1. Clone this repository (copy URL from the green "Code" button on GitHub)
-git clone <repository-url>
-cd <repository-folder>
+git clone https://github.com/shimlab/WaveFactor.git
+cd WaveFactor
 
 # 2. Create and activate a virtual environment
 python3 -m venv wavefactor-venv

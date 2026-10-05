@@ -14,8 +14,8 @@ To install WaveFactor in an isolated virtual environment:
 
 ```bash
 # 1. Clone this repository (copy URL from the green "Code" button on GitHub)
-git clone <repository-url>
-cd <repository-folder>
+git clone https://github.com/shimlab/WaveFactor.git
+cd WaveFactor
 
 # 2. Create and activate an isolated virtual environment
 python3 -m venv wavefactor-venv
