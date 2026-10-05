@@ -1,5 +1,6 @@
 """Simple multi-tier performance benchmark for WaveFactor."""
 
+import argparse
 import os
 import sys
 import time
@@ -84,17 +85,38 @@ if __name__ == "__main__":
     if cpp is None:
         raise RuntimeError("WaveFactor C++ backend not found. Compile the C++ extension first.")
 
-    print("Running Multi-Tier Performance Benchmark for WaveFactor...\n")
+    parser = argparse.ArgumentParser(description="Run WaveFactor benchmarks.")
+    has_cli_args = len(sys.argv) > 1
 
-    # ==========================================================
-    # EDIT BENCHMARK PARAMETERS DIRECTLY HERE:
-    # run_tier(name, grid_side, n_genes, K, D, iters)
-    # ==========================================================
-    results = [
-        run_tier("Tier 1 (Small)",  grid_side=16,  n_genes=1000, K=10, D=4, iters=10),
-        run_tier("Tier 2 (Medium)", grid_side=32,  n_genes=1000, K=10, D=5, iters=10),
-        run_tier("Tier 3 (Large)",  grid_side=64,  n_genes=1000, K=10, D=6, iters=10),
-        run_tier("Tier 4 (XLarge)", grid_side=128, n_genes=1000, K=10, D=7, iters=10),
-    ]
+    parser.add_argument("--grid_side", type=int, required=has_cli_args, help="Grid side length")
+    parser.add_argument("--n_genes", type=int, required=has_cli_args, help="Number of genes")
+    parser.add_argument("-K", type=int, required=has_cli_args, help="Number of factors")
+    parser.add_argument("-D", type=int, required=has_cli_args, help="Number of length scales")
+    parser.add_argument("--iters", type=int, required=has_cli_args, help="Number of CAVI iterations")
+    parser.add_argument("--n_iter1_runs", type=int, required=has_cli_args, help="Number of iteration 1 runs")
+
+    args = parser.parse_args()
+
+    if has_cli_args:
+        print("Running Single Tier Performance Benchmark for WaveFactor...\n")
+        results = [
+            run_tier(
+                "Single Tier",
+                grid_side=args.grid_side,
+                n_genes=args.n_genes,
+                K=args.K,
+                D=args.D,
+                iters=args.iters,
+                n_iter1_runs=args.n_iter1_runs,
+            )
+        ]
+    else:
+        print("Running Multi-Tier Performance Benchmark for WaveFactor...\n")
+        results = [
+            run_tier("Tier 1 (Small)",  grid_side=16,  n_genes=1000, K=10, D=4, iters=10),
+            run_tier("Tier 2 (Medium)", grid_side=32,  n_genes=1000, K=10, D=5, iters=10),
+            run_tier("Tier 3 (Large)",  grid_side=64,  n_genes=1000, K=10, D=6, iters=10),
+            run_tier("Tier 4 (XLarge)", grid_side=128, n_genes=1000, K=10, D=7, iters=10),
+        ]
 
     print_summary(results)
