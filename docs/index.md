@@ -3,7 +3,7 @@
 !!! info "Work in Progress"
     This documentation is a **work in progress** and subject to further improvements.
 
-WaveFactor is a Bayesian factor model for spatial transcriptomics. It models spatial patterns across multiple length scales using 2D Discrete Wavelet Transforms.
+**WaveFactor** (formerly `WaviFM`) is a Bayesian factor modeling framework for spatial transcriptomics that explicitly models spatial length scales by performing Coordinate Ascent Variational Inference (CAVI) directly on 2D Discrete Wavelet Transform (DWT) coefficients.
 
 ---
 
