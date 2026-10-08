@@ -39,7 +39,7 @@ pip install .
 Check that the installation succeeded:
 
 ```bash
-python -c "import wavefactor; print('WaveFactor installed successfully')"
+pip show wavefactor
 ```
 
 ---
