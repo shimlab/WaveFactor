@@ -75,7 +75,7 @@ def test_reference_baseline_parity():
     # 2. ELBO scalar and trajectory parity
     cur_elbo = float(res.elbo)
     ref_elbo = float(ref["final_elbo"])
-    assert np.isclose(cur_elbo, ref_elbo, rtol=1e-5, atol=1e-6), (
+    assert np.isclose(cur_elbo, ref_elbo, rtol=1e-5, atol=1e-8), (
         f"Final ELBO mismatch: {cur_elbo} vs reference {ref_elbo}"
     )
 
@@ -84,36 +84,36 @@ def test_reference_baseline_parity():
     assert len(cur_elbo_record) == len(ref_elbo_record), (
         f"ELBO record length mismatch: {len(cur_elbo_record)} vs {len(ref_elbo_record)}"
     )
-    assert np.allclose(cur_elbo_record, ref_elbo_record, rtol=1e-5, atol=1e-6), (
+    assert np.allclose(cur_elbo_record, ref_elbo_record, rtol=1e-5, atol=1e-8), (
         "ELBO trajectory mismatch across iterations."
     )
 
     # 3. Gene Loadings (mu_F * r_F) parity
-    assert np.allclose(res.loadings, ref["loadings"], rtol=1e-4, atol=1e-5), (
+    assert np.allclose(res.loadings, ref["loadings"], rtol=1e-5, atol=1e-8), (
         "Gene loadings mismatch against reference."
     )
 
     # 4. Gene posterior inclusion probabilities (PIPs) parity
-    assert np.allclose(res.gene_pip, ref["gene_pip"], rtol=1e-4, atol=1e-5), (
+    assert np.allclose(res.gene_pip, ref["gene_pip"], rtol=1e-5, atol=1e-8), (
         "Gene PIP mismatch against reference."
     )
 
     # 5. Spot-space spatial factors parity (2D IDWT reconstruction)
-    assert np.allclose(res.factors, ref["factors"], rtol=1e-4, atol=1e-5), (
+    assert np.allclose(res.factors, ref["factors"], rtol=1e-5, atol=1e-8), (
         "Spatial factors mismatch against reference."
     )
 
     # 6. Factor and noise precision hyperparameters parity
-    assert np.allclose(res.alpha_hat_t, ref["alpha_hat_t"], rtol=1e-5, atol=1e-6), (
+    assert np.allclose(res.alpha_hat_t, ref["alpha_hat_t"], rtol=1e-5, atol=1e-8), (
         "Factor precision shape (alpha_hat_t) mismatch against reference."
     )
-    assert np.allclose(res.beta_hat_t, ref["beta_hat_t"], rtol=1e-5, atol=1e-6), (
+    assert np.allclose(res.beta_hat_t, ref["beta_hat_t"], rtol=1e-5, atol=1e-8), (
         "Factor precision rate (beta_hat_t) mismatch against reference."
     )
-    assert np.allclose(res.alpha_hat_tau, ref["alpha_hat_tau"], rtol=1e-5, atol=1e-6), (
+    assert np.allclose(res.alpha_hat_tau, ref["alpha_hat_tau"], rtol=1e-5, atol=1e-8), (
         "Noise precision shape (alpha_hat_tau) mismatch against reference."
     )
-    assert np.allclose(res.beta_hat_tau, ref["beta_hat_tau"], rtol=1e-5, atol=1e-6), (
+    assert np.allclose(res.beta_hat_tau, ref["beta_hat_tau"], rtol=1e-5, atol=1e-8), (
         "Noise precision rate (beta_hat_tau) mismatch against reference."
     )
 
@@ -162,6 +162,6 @@ def test_modern_wavefactor_estimator_parity():
         verbose=False,
     )
     model_repeat.fit(expr, coords)
-    assert np.isclose(model.elbo_, model_repeat.elbo_), "Repeated fit with same random_state differed!"
-    assert np.allclose(model.loadings_, model_repeat.loadings_), "Repeated fit loadings differed!"
-    assert np.allclose(model.factors_, model_repeat.factors_), "Repeated fit factors differed!"
+    assert np.isclose(model.elbo_, model_repeat.elbo_, rtol=1e-5, atol=1e-8), "Repeated fit with same random_state differed!"
+    assert np.allclose(model.loadings_, model_repeat.loadings_, rtol=1e-5, atol=1e-8), "Repeated fit loadings differed!"
+    assert np.allclose(model.factors_, model_repeat.factors_, rtol=1e-5, atol=1e-8), "Repeated fit factors differed!"
