@@ -22,7 +22,7 @@ Using an isolated virtual environment prevents conflicts with other Python packa
 git clone https://github.com/shimlab/WaveFactor.git
 cd WaveFactor
 
-# 2. Create and activate a virtual environment
+# 2. Create and activate a virtual environment (this might differ depending on Python setup/operating system, etc.)
 python3 -m venv wavefactor-venv
 source wavefactor-venv/bin/activate
 
