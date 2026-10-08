@@ -42,12 +42,6 @@ Check that the installation succeeded:
 python -c "import wavefactor; print('WaveFactor installed successfully')"
 ```
 
-Run all tests (these should all pass if installation succeeded):
-
-```bash
-python tests/run_all_tests.py
-```
-
 ---
 
 ## 4. (Optional) Deactivate or Remove
