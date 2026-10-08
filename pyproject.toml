@@ -9,9 +9,6 @@ description = "Bayesian Multiresolution Wavelet Spatial Factor Model for Spatial
 readme = "README.md"
 requires-python = ">=3.7"
 license = { text = "MIT" }
-authors = [
-    { name = "Yulin Wang" }
-]
 classifiers = [
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3.7",
