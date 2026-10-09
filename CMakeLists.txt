@@ -64,6 +64,11 @@ if(BUILD_PYTHON_MODULE)
         # Optimization flags
         target_compile_options(WaveFactor PRIVATE ${WAVEFACTOR_COMPILE_OPTIONS})
 
+        # Static linking of GCC/MinGW runtimes on Windows to avoid external DLL dependencies
+        if(MINGW)
+            target_link_options(WaveFactor PRIVATE -static-libgcc -static-libstdc++)
+        endif()
+
         # Create __init__.py in binary directory for testing direct imports from build
         set(INIT_PY "${CMAKE_CURRENT_BINARY_DIR}/__init__.py")
         if(NOT EXISTS ${INIT_PY})

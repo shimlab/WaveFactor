@@ -13,12 +13,34 @@ from multiprocessing import Pool
 
 # Attempt to load compiled C++ backend
 _CPP_MODULE = None
+_CPP_LOAD_ERROR = None
+
+
+def _init_windows_dll_directories():
+    """Ensure Windows finds compiler runtime DLLs if dynamically linked (Python 3.8+)."""
+    if sys.platform != "win32" or not hasattr(os, "add_dll_directory"):
+        return
+
+    # Check common MinGW / UCRT64 / MSYS2 bin directories in PATH
+    path_env = os.environ.get("PATH", "")
+    for p in path_env.split(os.pathsep):
+        p_clean = p.strip('"').strip()
+        if p_clean and os.path.isdir(p_clean):
+            # If directory contains MinGW runtime DLLs, add to DLL search directory
+            if any(os.path.exists(os.path.join(p_clean, dll)) for dll in ("libstdc++-6.dll", "libgcc_s_seh-1.dll")):
+                try:
+                    os.add_dll_directory(p_clean)
+                except (OSError, ValueError):
+                    pass
+
 
 def _get_cpp_backend():
     """Dynamically locates and loads the compiled C++ WaveFactor Pybind11 module."""
-    global _CPP_MODULE
+    global _CPP_MODULE, _CPP_LOAD_ERROR
     if _CPP_MODULE is not None:
         return _CPP_MODULE
+
+    _init_windows_dll_directories()
 
     # Try standard import names
     import_candidates = [
@@ -27,14 +49,17 @@ def _get_cpp_backend():
         "build.WaveFactor",
     ]
 
+    last_import_error = None
     for cand in import_candidates:
         try:
             mod = __import__(cand, fromlist=["cavi", "Parameters", "CaviDimensions", "CaviResult"])
             if hasattr(mod, "Parameters"):
                 _CPP_MODULE = mod
                 return _CPP_MODULE
-        except (ImportError, ModuleNotFoundError):
+        except ModuleNotFoundError:
             pass
+        except ImportError as err:
+            last_import_error = err
 
     # Check build directories relative to current file (including MSVC Release/Debug directories)
     pkg_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -52,9 +77,13 @@ def _get_cpp_backend():
                 if hasattr(mod, "Parameters"):
                     _CPP_MODULE = mod
                     return _CPP_MODULE
-            except (ImportError, ModuleNotFoundError):
+            except ModuleNotFoundError:
                 pass
+            except ImportError as err:
+                last_import_error = err
 
+    if last_import_error is not None:
+        _CPP_LOAD_ERROR = last_import_error
     return None
 
 
@@ -214,7 +243,8 @@ def _run_single_cavi_worker(
     """Worker task for multiprocessing execution of a single CAVI run."""
     cpp = _get_cpp_backend()
     if cpp is None:
-        raise RuntimeError("C++ WaveFactor module is required for CAVI execution.")
+        err_msg = f" ({_CPP_LOAD_ERROR})" if _CPP_LOAD_ERROR else ""
+        raise RuntimeError(f"C++ WaveFactor module is required for CAVI execution.{err_msg}")
 
     cpp_params = build_parameters_cpp(params_dict, cpp)
     t0 = time.time()
@@ -271,9 +301,10 @@ def run_cavi(
     """
     cpp = _get_cpp_backend()
     if cpp is None:
+        err_msg = f" ({_CPP_LOAD_ERROR})" if _CPP_LOAD_ERROR else ""
         raise RuntimeError(
             "WaveFactor C++ backend not found. "
-            "Please ensure the C++ extension module is compiled."
+            f"Please ensure the C++ extension module is compiled.{err_msg}"
         )
 
     # Initialize master RNG for reproducible initializations across workers
