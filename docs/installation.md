@@ -7,6 +7,7 @@
 ## 1. Requirements
 
 Before installing, make sure you have:
+
 - **Python** $\ge 3.7$
 - **CMake** $\ge 3.16$
 - **A C++17 compiler** (e.g. GCC or Clang)

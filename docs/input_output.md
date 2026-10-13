@@ -9,6 +9,7 @@
 WaveFactor needs two inputs: an expression matrix `X` and spot coordinates `coords`.
 
 ### A. The Spatial Grid
+
 - **Square Grid**: The data must sit on a square grid where each side length $L$ is a power of 2 (e.g., $16 \times 16$, $32 \times 32$, or $64 \times 64$).
 - **Total Spots**: The total number of spots must be $L^2$ (a power of 4, such as 256, 1024, or 4096).
 - **Coordinates (`coords`)**: A 2D array of shape `(N_spots, 2)` with integer indices from $0$ to $L-1$. Each grid location must appear exactly once.
