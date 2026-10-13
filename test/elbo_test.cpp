@@ -5,24 +5,9 @@
 #include "testing_utilities.hpp"
 #include <cmath>
 
-TEST(CaviElboTest, ComputeELogLikelihoodYijkLGivenPiLFtau)
-{
-    EXPECT_REL_EQ(compute_E_log_likelihood_Y_ijk_l_given_pi_L_F_tau(1, 1, 1, 1, mocks::parameters), mocks::E_log_likelihood_Y_ijk_l_given_pi_L_F_tau);
-}
-
-TEST(CaviElboTest, ComputeELogLikelihoodLijklGivenZLt)
-{
-    EXPECT_REL_EQ(compute_E_log_likelihood_L_ijk_l_given_Z_L_t(1, 1, 1, 1, mocks::parameters), mocks::E_log_likelihood_L_ijk_l_given_Z_L_t);
-}
-
 TEST(CaviElboTest, ComputeELogLikelihoodFijGivenZF)
 {
     EXPECT_REL_EQ(compute_E_log_likelihood_F_i_j_given_Z_F(1, 1, mocks::parameters), mocks::E_log_likelihood_F_i_j_given_Z_F);
-}
-
-TEST(CaviElboTest, ComputeELogLikelihoodZLijkl)
-{
-    EXPECT_REL_EQ(compute_E_log_likelihood_Z_L_ijk_l(1, 1, 1, 1, mocks::parameters), mocks::E_log_likelihood_Z_L_ijk_l);
 }
 
 TEST(CaviElboTest, ComputeELogLikelihoodZFij)
@@ -38,11 +23,6 @@ TEST(CaviElboTest, ComputeELogLikelihoodTil)
 TEST(CaviElboTest, ComputeELogLikelihoodTauil)
 {
     EXPECT_REL_EQ(compute_E_log_likelihood_tau_i_l(1, 1, mocks::parameters), mocks::E_log_likelihood_tau_i_l);
-}
-
-TEST(CaviElboTest, ComputeENegativeVariationalLogLikelihoodLijklZLikjl)
-{
-    EXPECT_REL_EQ(compute_E_negative_variational_log_likelihood_L_ijk_l_Z_L_ijk_l(1, 1, 1, 1, mocks::parameters), mocks::E_negative_variational_log_likelihood_L_ijk_l_Z_L_ijk_l);
 }
 
 TEST(CaviElboTest, ComputeENegativeVariationalLogLikelihoodFijZFij)

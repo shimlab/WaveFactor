@@ -1,6 +1,6 @@
 """
 Coordinate Ascent Variational Inference (CAVI) execution engine for WaveFactor.
-Interactions with the C++ Pybind11 backend and multiprocessing parallelization.
+Interactions with the C++ Pybind11 backend and multithreaded parallelization.
 """
 
 from typing import Dict, Any, Optional, List, Tuple
@@ -9,7 +9,6 @@ import sys
 import time
 import copy
 import numpy as np
-from multiprocessing import Pool
 from concurrent.futures import ThreadPoolExecutor
 
 # Attempt to load compiled C++ backend
