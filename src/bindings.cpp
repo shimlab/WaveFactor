@@ -51,5 +51,6 @@ PYBIND11_MODULE(WaveFactor, m)
         .def_readonly("elbo", &CaviResult::elbo);
 
     m.def("cavi", &cavi, "Run the CAVI (coordinate ascent variational inference) algorithm for model inference",
-          py::arg("parameters"), py::arg("max_iterations"), py::arg("relative_elbo_threshold"));
+          py::arg("parameters"), py::arg("max_iterations"), py::arg("relative_elbo_threshold"),
+          py::call_guard<py::gil_scoped_release>());
 }

@@ -174,7 +174,7 @@ CaviResult cavi(Parameters &parameters, int max_iterations, double relative_elbo
         {
             for (int l = 0; l < n_factors; ++l)
             {
-                UpdateTResult update_t_i_l = compute_update_t(i, l, new_parameters);
+                UpdateTResult update_t_i_l = compute_update_t(i, l, ctx_F_Z_F_tau, new_parameters);
                 new_parameters.alpha_hat_t[i][l] = update_t_i_l.update_alpha_hat_t;
                 new_parameters.beta_hat_t[i][l] = update_t_i_l.update_beta_hat_t;
             }

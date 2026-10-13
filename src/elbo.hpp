@@ -5,54 +5,13 @@
 #include <cmath>
 #include "utilities.hpp"
 #include <unsupported/Eigen/SpecialFunctions>
-
-inline double compute_E_log_likelihood_Y_ijk_l_given_pi_L_F_tau(int i, int j, int k, int l, const Parameters &parameters)
-{
-    double theta_tau_i_l = theta_tau(i, l, parameters);
-    double gamma_tau_i_l = gamma_tau(i, l, parameters);
-    double Y_ijk_l = parameters.Y[l][i][j][k];
-
-    int max_m = parameters.n_factors; // i.e. number of factors
-
-    double xi_product_sum = 0.0;
-    double xi_product_sq_sum = 0.0;
-    double lambda_product_sum = 0.0;
-    for (int m = 0; m < max_m; ++m)
-    {
-        double x_m = xi_L(i, j, k, m, parameters) * xi_F(m, l, parameters);
-        xi_product_sum += x_m;
-        xi_product_sq_sum += x_m * x_m;
-        lambda_product_sum += lambda_L(i, j, k, m, parameters) * lambda_F(m, l, parameters);
-    }
-
-    double xi_quad_product_sum = xi_product_sum * xi_product_sum - xi_product_sq_sum;
-
-    return 0.5 * (theta_tau_i_l - gamma_tau_i_l * (Y_ijk_l * Y_ijk_l - 2 * Y_ijk_l * xi_product_sum +
-                                                   xi_quad_product_sum + lambda_product_sum));
-}
-
-inline double compute_E_log_likelihood_L_ijk_l_given_Z_L_t(int i, int j, int k, int l, const Parameters &parameters)
-{
-    double r_L_ijk_l = parameters.r_L[l][i][j][k];
-    double theta_t_i_l = theta_t(i, l, parameters);
-    double gamma_t_i_l = gamma_t(i, l, parameters);
-    double lambda_L_ijk_l = lambda_L(i, j, k, l, parameters);
-    return 0.5 * (r_L_ijk_l * theta_t_i_l - gamma_t_i_l * lambda_L_ijk_l);
-}
+#include "updates.hpp"
 
 inline double compute_E_log_likelihood_F_i_j_given_Z_F(int i, int j, const Parameters &parameters)
 {
     double r_F_i_j = parameters.r_F[i][j];
     double lambda_F_i_j = lambda_F(i, j, parameters);
     return -0.5 * (r_F_i_j * std::log(2 * M_PI) + lambda_F_i_j);
-}
-
-inline double compute_E_log_likelihood_Z_L_ijk_l(int i, int j, int k, int l, const Parameters &parameters)
-{
-    double r_L_ijk_l = parameters.r_L[l][i][j][k];
-    double log_pi_L_i = parameters.log_pi_L[i];
-    double pi_L_i = std::exp(log_pi_L_i);
-    return r_L_ijk_l * log_pi_L_i + (1 - r_L_ijk_l) * std::log(1 - pi_L_i);
 }
 
 inline double compute_E_log_likelihood_Z_F_i_j(int i, int j, const Parameters &parameters)
@@ -85,13 +44,6 @@ inline double compute_E_log_likelihood_tau_i_l(int i, int l, const Parameters &p
            alpha_tau_i_l * std::log(beta_tau_i_l) - std::lgamma(alpha_tau_i_l);
 }
 
-inline double compute_E_negative_variational_log_likelihood_L_ijk_l_Z_L_ijk_l(int i, int j, int k, int l, const Parameters &parameters)
-{
-    double r_L_ijk_l = parameters.r_L[l][i][j][k];
-    double sigma_squared_L_ijk_l = parameters.sigma_squared_L[l][i][j][k];
-    return (r_L_ijk_l / 2) * (std::log(2 * M_PI * sigma_squared_L_ijk_l) + 1) - r_L_ijk_l * std::log(r_L_ijk_l) -
-           (1 - r_L_ijk_l) * std::log(1 - r_L_ijk_l);
-}
 
 inline double compute_E_negative_variational_log_likelihood_F_i_j_Z_F_i_j(int i, int j, const Parameters &parameters)
 {
@@ -160,13 +112,32 @@ inline double compute_elbo(bool assume_tau_updated, const Parameters &parameters
     {
         for (int i = 0; i < parameters.mu_L[l].size(); ++i)
         {
+            double theta_t_i_l = theta_t(i, l, parameters);
+            double gamma_t_i_l = gamma_t(i, l, parameters);
+            double log_pi_L_i = parameters.log_pi_L[i];
+            double pi_L_i = std::exp(log_pi_L_i);
+            double log_1_minus_pi_L_i = std::log(1.0 - pi_L_i);
+
             for (int j = 0; j < parameters.mu_L[l][i].size(); ++j)
             {
                 for (int k = 0; k < parameters.mu_L[l][i][j].size(); ++k)
                 {
-                    elbo += compute_E_log_likelihood_L_ijk_l_given_Z_L_t(i, j, k, l, parameters);
-                    elbo += compute_E_log_likelihood_Z_L_ijk_l(i, j, k, l, parameters);
-                    elbo += compute_E_negative_variational_log_likelihood_L_ijk_l_Z_L_ijk_l(i, j, k, l, parameters);
+                    double r_L_ijk_l = parameters.r_L[l][i][j][k];
+                    double lambda_L_ijk_l = lambda_L(i, j, k, l, parameters);
+                    double sigma_squared_L_ijk_l = parameters.sigma_squared_L[l][i][j][k];
+
+                    // 1. E[log p(L_{ijk,l} | Z^L_{ijk,l}, t_{i,l})]
+                    double E_log_likelihood_L_ijk_l_given_Z_L_t = 0.5 * (r_L_ijk_l * theta_t_i_l - gamma_t_i_l * lambda_L_ijk_l);
+
+                    // 2. E[log p(Z^L_{ijk,l} | pi^L_i)]
+                    double E_log_likelihood_Z_L_ijk_l = r_L_ijk_l * log_pi_L_i + (1.0 - r_L_ijk_l) * log_1_minus_pi_L_i;
+
+                    // 3. -E[log q(L_{ijk,l}, Z^L_{ijk,l})] variational entropy
+                    double E_negative_variational_log_likelihood_L_ijk_l_Z_L_ijk_l = (r_L_ijk_l / 2.0) * (std::log(2.0 * M_PI * sigma_squared_L_ijk_l) + 1.0)
+                                                                                     - r_L_ijk_l * std::log(r_L_ijk_l)
+                                                                                     - (1.0 - r_L_ijk_l) * std::log(1.0 - r_L_ijk_l);
+
+                    elbo += E_log_likelihood_L_ijk_l_given_Z_L_t + E_log_likelihood_Z_L_ijk_l + E_negative_variational_log_likelihood_L_ijk_l_Z_L_ijk_l;
                 }
             }
         }
@@ -190,17 +161,17 @@ inline double compute_elbo(bool assume_tau_updated, const Parameters &parameters
     }
     else
     {
+        FZFTauUpdateContext ctx = make_F_Z_F_tau_update_context(parameters);
         for (int l = 0; l < n_features; ++l)
         {
             for (int i = 0; i < parameters.Y[l].size(); ++i)
             {
-                for (int j = 0; j < parameters.Y[l][i].size(); ++j)
-                {
-                    for (int k = 0; k < parameters.Y[l][i][j].size(); ++k)
-                    {
-                        elbo += compute_E_log_likelihood_Y_ijk_l_given_pi_L_F_tau(i, j, k, l, parameters);
-                    }
-                }
+                double N_i = static_cast<double>(parameters.wavelet_indices[i].n_coefficients);
+                double theta_tau_i_l = theta_tau(i, l, parameters);
+                double gamma_tau_i_l = gamma_tau(i, l, parameters);
+                double delta_beta = compute_update_beta_hat_tau(i, l, ctx, parameters) - parameters.beta_tau[i][l];
+
+                elbo += 0.5 * N_i * theta_tau_i_l - gamma_tau_i_l * delta_beta;
             }
         }
     }

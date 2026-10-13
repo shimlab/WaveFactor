@@ -1,6 +1,6 @@
 """
 Coordinate Ascent Variational Inference (CAVI) execution engine for WaveFactor.
-Interactions with the C++ Pybind11 backend and multiprocessing parallelization.
+Interactions with the C++ Pybind11 backend and multithreaded parallelization.
 """
 
 from typing import Dict, Any, Optional, List, Tuple
@@ -9,7 +9,7 @@ import sys
 import time
 import copy
 import numpy as np
-from multiprocessing import Pool
+from concurrent.futures import ThreadPoolExecutor
 
 # Attempt to load compiled C++ backend
 _CPP_MODULE = None
@@ -239,8 +239,9 @@ def _run_single_cavi_worker(
     params_dict: Dict[str, Any],
     max_iter: int,
     tol: float,
+    extract_params: bool = True,
 ) -> Dict[str, Any]:
-    """Worker task for multiprocessing execution of a single CAVI run."""
+    """Worker task for executing a single CAVI run."""
     cpp = _get_cpp_backend()
     if cpp is None:
         err_msg = f" ({_CPP_LOAD_ERROR})" if _CPP_LOAD_ERROR else ""
@@ -251,12 +252,15 @@ def _run_single_cavi_worker(
     result_cpp = cpp.cavi(cpp_params, max_iter, tol)
     t1 = time.time()
 
-    return {
-        "parameters": extract_cpp_parameters_to_dict(result_cpp.parameters),
+    out = {
+        "result_cpp": result_cpp,
         "elbo_record": list(result_cpp.elbo_record),
         "elbo": float(result_cpp.elbo),
         "cpp_time": t1 - t0,
     }
+    if extract_params:
+        out["parameters"] = extract_cpp_parameters_to_dict(result_cpp.parameters)
+    return out
 
 
 def run_cavi(
@@ -288,7 +292,7 @@ def run_cavi(
     n_init : int, default=5
         Number of random initializations.
     n_jobs : int, default=-1
-        Number of parallel worker processes (-1 uses all available CPU cores).
+        Number of parallel worker threads (-1 uses all available CPU cores).
     random_state : int, optional
         Seed for deterministic random number generation.
     verbose : bool, default=True
@@ -323,13 +327,13 @@ def run_cavi(
     if n_jobs != 1 and n_init > 1:
         num_workers = os.cpu_count() if n_jobs == -1 else max(1, n_jobs)
         num_workers = min(num_workers, n_init)
-        tasks = [(p, max_iter, tol) for p in params_list]
-        with Pool(processes=num_workers) as pool:
-            results_list = pool.starmap(_run_single_cavi_worker, tasks)
+        with ThreadPoolExecutor(max_workers=num_workers) as executor:
+            futures = [executor.submit(_run_single_cavi_worker, p, max_iter, tol, False) for p in params_list]
+            results_list = [f.result() for f in futures]
     else:
         # Serial execution
         for i, p in enumerate(params_list):
-            res = _run_single_cavi_worker(p, max_iter, tol)
+            res = _run_single_cavi_worker(p, max_iter, tol, extract_params=False)
             results_list.append(res)
             if verbose:
                 n_iterations = len(res["elbo_record"]) - 1
@@ -350,9 +354,18 @@ def run_cavi(
                 f"\tTime taken (s) = {res['cpp_time']:.2f}"
             )
 
-    # Select initialization with maximal ELBO
-    best_idx, best_result = max(enumerate(results_list), key=lambda item: item[1]["elbo"])
+    # Select initialization with maximal ELBO and extract parameters ONLY for the winner
+    best_idx, best_item = max(enumerate(results_list), key=lambda item: item[1]["elbo"])
     if verbose:
         print(f"Initialisation {best_idx + 1} has maximal ELBO and is returned")
 
-    return best_result
+    best_params = best_item.get("parameters")
+    if best_params is None:
+        best_params = extract_cpp_parameters_to_dict(best_item["result_cpp"].parameters)
+
+    return {
+        "parameters": best_params,
+        "elbo_record": best_item["elbo_record"],
+        "elbo": best_item["elbo"],
+        "cpp_time": best_item["cpp_time"],
+    }

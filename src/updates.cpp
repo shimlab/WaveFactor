@@ -292,9 +292,9 @@ double compute_update_alpha_hat_t(int i, int l, const Parameters &parameters)
     double alpha_t_i_l = parameters.alpha_t[i][l];
 
     double r_sum = 0.0;
-    for (size_t j = 0; j < parameters.Y[l][i].size(); ++j)
+    for (size_t j = 0; j < parameters.mu_L[l][i].size(); ++j)
     {
-        for (size_t k = 0; k < parameters.Y[l][i][j].size(); ++k)
+        for (size_t k = 0; k < parameters.mu_L[l][i][j].size(); ++k)
         {
             r_sum += parameters.r_L[l][i][j][k];
         }
@@ -308,9 +308,9 @@ double compute_update_beta_hat_t(int i, int l, const Parameters &parameters)
     double beta_t_i_l = parameters.beta_t[i][l];
 
     double lambda_sum = 0.0;
-    for (size_t j = 0; j < parameters.Y[l][i].size(); ++j)
+    for (size_t j = 0; j < parameters.mu_L[l][i].size(); ++j)
     {
-        for (size_t k = 0; k < parameters.Y[l][i][j].size(); ++k)
+        for (size_t k = 0; k < parameters.mu_L[l][i][j].size(); ++k)
         {
             lambda_sum += lambda_L(i, j, k, l, parameters);
         }
@@ -318,10 +318,26 @@ double compute_update_beta_hat_t(int i, int l, const Parameters &parameters)
     return beta_t_i_l + 0.5 * lambda_sum;
 }
 
+double compute_update_beta_hat_t(int i, int l, const FZFTauUpdateContext &ctx, const Parameters &parameters)
+{
+    double beta_t_i_l = parameters.beta_t[i][l];
+    return beta_t_i_l + 0.5 * ctx.lambda_bar_L[i][l];
+}
+
 UpdateTResult compute_update_t(int i, int l, const Parameters &parameters)
 {
     double update_alpha_hat_t_i_l = compute_update_alpha_hat_t(i, l, parameters);
     double update_beta_hat_t_i_l = compute_update_beta_hat_t(i, l, parameters);
+
+    return {
+        update_alpha_hat_t_i_l,
+        update_beta_hat_t_i_l};
+}
+
+UpdateTResult compute_update_t(int i, int l, const FZFTauUpdateContext &ctx, const Parameters &parameters)
+{
+    double update_alpha_hat_t_i_l = compute_update_alpha_hat_t(i, l, parameters);
+    double update_beta_hat_t_i_l = compute_update_beta_hat_t(i, l, ctx, parameters);
 
     return {
         update_alpha_hat_t_i_l,
