@@ -5,6 +5,7 @@
 #include <cmath>
 #include "utilities.hpp"
 #include <unsupported/Eigen/SpecialFunctions>
+#include "updates.hpp"
 
 inline double compute_E_log_likelihood_Y_ijk_l_given_pi_L_F_tau(int i, int j, int k, int l, const Parameters &parameters)
 {
@@ -160,13 +161,25 @@ inline double compute_elbo(bool assume_tau_updated, const Parameters &parameters
     {
         for (int i = 0; i < parameters.mu_L[l].size(); ++i)
         {
+            double theta_t_i_l = theta_t(i, l, parameters);
+            double gamma_t_i_l = gamma_t(i, l, parameters);
+            double log_pi_L_i = parameters.log_pi_L[i];
+            double pi_L_i = std::exp(log_pi_L_i);
+            double log_1_minus_pi_L_i = std::log(1.0 - pi_L_i);
+
             for (int j = 0; j < parameters.mu_L[l][i].size(); ++j)
             {
                 for (int k = 0; k < parameters.mu_L[l][i][j].size(); ++k)
                 {
-                    elbo += compute_E_log_likelihood_L_ijk_l_given_Z_L_t(i, j, k, l, parameters);
-                    elbo += compute_E_log_likelihood_Z_L_ijk_l(i, j, k, l, parameters);
-                    elbo += compute_E_negative_variational_log_likelihood_L_ijk_l_Z_L_ijk_l(i, j, k, l, parameters);
+                    double r_L_ijk_l = parameters.r_L[l][i][j][k];
+                    double lambda_L_ijk_l = lambda_L(i, j, k, l, parameters);
+                    double sigma_squared_L_ijk_l = parameters.sigma_squared_L[l][i][j][k];
+
+                    elbo += 0.5 * (r_L_ijk_l * theta_t_i_l - gamma_t_i_l * lambda_L_ijk_l);
+                    elbo += r_L_ijk_l * log_pi_L_i + (1.0 - r_L_ijk_l) * log_1_minus_pi_L_i;
+                    elbo += (r_L_ijk_l / 2.0) * (std::log(2.0 * M_PI * sigma_squared_L_ijk_l) + 1.0)
+                            - r_L_ijk_l * std::log(r_L_ijk_l)
+                            - (1.0 - r_L_ijk_l) * std::log(1.0 - r_L_ijk_l);
                 }
             }
         }
@@ -190,17 +203,17 @@ inline double compute_elbo(bool assume_tau_updated, const Parameters &parameters
     }
     else
     {
+        FZFTauUpdateContext ctx = make_F_Z_F_tau_update_context(parameters);
         for (int l = 0; l < n_features; ++l)
         {
             for (int i = 0; i < parameters.Y[l].size(); ++i)
             {
-                for (int j = 0; j < parameters.Y[l][i].size(); ++j)
-                {
-                    for (int k = 0; k < parameters.Y[l][i][j].size(); ++k)
-                    {
-                        elbo += compute_E_log_likelihood_Y_ijk_l_given_pi_L_F_tau(i, j, k, l, parameters);
-                    }
-                }
+                double N_i = static_cast<double>(parameters.wavelet_indices[i].n_coefficients);
+                double theta_tau_i_l = theta_tau(i, l, parameters);
+                double gamma_tau_i_l = gamma_tau(i, l, parameters);
+                double delta_beta = compute_update_beta_hat_tau(i, l, ctx, parameters) - parameters.beta_tau[i][l];
+
+                elbo += 0.5 * N_i * theta_tau_i_l - gamma_tau_i_l * delta_beta;
             }
         }
     }

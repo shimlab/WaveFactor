@@ -95,6 +95,8 @@ double compute_update_beta_hat_tau(int i, int l, const FZFTauUpdateContext &ctx,
 UpdateTauResult compute_update_tau(int i, int l, const FZFTauUpdateContext &ctx, const Parameters &parameters);
 double compute_update_alpha_hat_t(int i, int l, const Parameters &parameters);
 double compute_update_beta_hat_t(int i, int l, const Parameters &parameters);
+double compute_update_beta_hat_t(int i, int l, const FZFTauUpdateContext &ctx, const Parameters &parameters);
 UpdateTResult compute_update_t(int i, int l, const Parameters &parameters);
+UpdateTResult compute_update_t(int i, int l, const FZFTauUpdateContext &ctx, const Parameters &parameters);
 
 #endif /*UPDATES_HPP_INCLUDED*/
