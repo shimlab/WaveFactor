@@ -76,6 +76,12 @@ class WaveFactor(BaseEstimator):
         Random seed for deterministic initialization and reproducibility.
     verbose : bool, default=True
         Whether to log progress during CAVI optimization.
+    init : str, default="prior"
+        Variational parameter initialisation strategy. Options:
+        - "prior": Sample variational states from generative prior expectations
+          with mild jitter to break symmetry. Resolves scale explosion and noise
+          swamping in high-dimensional settings.
+        - "random": Legacy uniform pseudo-random initialization on [-10, 10].
     """
 
     def __init__(
@@ -94,6 +100,7 @@ class WaveFactor(BaseEstimator):
         n_jobs: int = -1,
         random_state: Optional[int] = None,
         verbose: bool = True,
+        init: str = "prior",
     ):
         self.n_factors = n_factors
         self.n_length_scales = n_length_scales
@@ -109,6 +116,7 @@ class WaveFactor(BaseEstimator):
         self.n_jobs = n_jobs
         self.random_state = random_state
         self.verbose = verbose
+        self.init = init
 
         # Fitted attributes (populated after fit)
         self.result_: Optional[WaveFactorResult] = None
@@ -166,6 +174,7 @@ class WaveFactor(BaseEstimator):
             n_jobs=self.n_jobs,
             random_state=self.random_state,
             verbose=self.verbose,
+            init=self.init,
         )
 
         # 4. Construct rich result object

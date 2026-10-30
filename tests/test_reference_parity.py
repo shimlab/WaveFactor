@@ -1,7 +1,8 @@
 """
 Deterministic reference baseline parity test.
 Verifies that the modernized WaveFactor codebase matches pre-v2.0 numerical
-outputs from the main branch fixtures (tests/fixtures/reference_output.npz).
+outputs from the main branch fixtures (tests/fixtures/reference_output.npz)
+and new prior-based variational warmup fixture (tests/fixtures/reference_output_prior_init.npz).
 """
 
 import os
@@ -17,6 +18,7 @@ from wavefactor.engine import init_parameters, _run_single_cavi_worker
 FIXTURES_DIR = os.path.join(os.path.dirname(__file__), "fixtures")
 CSV_PATH = os.path.join(FIXTURES_DIR, "reference_input.csv")
 NPZ_PATH = os.path.join(FIXTURES_DIR, "reference_output.npz")
+PRIOR_NPZ_PATH = os.path.join(FIXTURES_DIR, "reference_output_prior_init.npz")
 
 
 def _load_reference_data():
@@ -30,8 +32,8 @@ def _load_reference_data():
 def test_reference_baseline_parity():
     """
     Validates that the modern WaveFactor pipeline (prepare_spatial_data, CAVI engine,
-    WaveFactorResult) produces exact numerical outputs matching the pre-v2.0
-    reference baseline fixtures (tests/fixtures/reference_output.npz).
+    WaveFactorResult) with legacy init='random' produces exact numerical outputs
+    matching the pre-v2.0 reference baseline fixtures (tests/fixtures/reference_output.npz).
     """
     df, ref = _load_reference_data()
 
@@ -46,10 +48,10 @@ def test_reference_baseline_parity():
         n_length_scales=int(ref["n_length_scales"]),
     )
 
-    # Execute multi-initialization CAVI matching exact reference seed
+    # Execute multi-initialization CAVI matching exact reference seed with legacy random init
     np.random.seed(int(ref["seed"]))
     params_list = [
-        init_parameters(data.true_Y, data.dimensions, priors=None, rng=None)
+        init_parameters(data.true_Y, data.dimensions, priors=None, rng=None, init="random")
         for _ in range(int(ref["n_init"]))
     ]
 
@@ -118,50 +120,188 @@ def test_reference_baseline_parity():
     )
 
 
+def test_reference_prior_init_parity():
+    """
+    Validates that the modern WaveFactor pipeline with default init='prior'
+    produces exact deterministic numerical outputs matching the golden fixture
+    (tests/fixtures/reference_output_prior_init.npz).
+    """
+    assert os.path.exists(CSV_PATH), f"Fixture missing: {CSV_PATH}"
+    assert os.path.exists(PRIOR_NPZ_PATH), f"Fixture missing: {PRIOR_NPZ_PATH}"
+
+    df = pd.read_csv(CSV_PATH)
+    ref = np.load(PRIOR_NPZ_PATH)
+
+    gene_cols = [c for c in df.columns if c.startswith("gene_")]
+    expr = df[gene_cols].values
+    coords = df[["x_index", "y_index"]].values
+
+    data = prepare_spatial_data(
+        X=expr,
+        coords=coords,
+        n_factors=int(ref["n_factors"]),
+        n_length_scales=int(ref["n_length_scales"]),
+    )
+
+    np.random.seed(int(ref["seed"]))
+    params_list = [
+        init_parameters(data.true_Y, data.dimensions, priors=None, rng=None, init="prior")
+        for _ in range(int(ref["n_init"]))
+    ]
+
+    results_list = [
+        _run_single_cavi_worker(p, max_iter=int(ref["max_iter"]), tol=float(ref["tol"]))
+        for p in params_list
+    ]
+    best_idx, best_res = max(enumerate(results_list), key=lambda x: x[1]["elbo"])
+
+    res = WaveFactorResult(
+        parameters=best_res["parameters"],
+        elbo_record=best_res["elbo_record"],
+        elbo=best_res["elbo"],
+        dimensions=data.dimensions,
+        grid_side_length=data.grid_side_length,
+        spot_grid_coords=data.spot_grid_coords,
+        coords=data.coords,
+    )
+
+    # 1. Multi-initialization selection matches golden fixture (Init 2)
+    assert best_idx == int(ref["best_idx"])
+
+    # 2. ELBO scalar and trajectory parity
+    cur_elbo = float(res.elbo)
+    ref_elbo = float(ref["final_elbo"])
+    assert np.isclose(cur_elbo, ref_elbo, rtol=1e-5, atol=1e-8), (
+        f"Final ELBO mismatch: {cur_elbo} vs golden {ref_elbo}"
+    )
+
+    cur_elbo_record = res.elbo_history
+    ref_elbo_record = np.asarray(ref["elbo_record"], dtype=np.float64)
+    assert len(cur_elbo_record) == len(ref_elbo_record)
+    assert np.allclose(cur_elbo_record, ref_elbo_record, rtol=1e-5, atol=1e-8)
+
+    # 3. Gene Loadings and PIPs parity
+    assert np.allclose(res.loadings, ref["loadings"], rtol=1e-5, atol=1e-8)
+    assert np.allclose(res.gene_pip, ref["gene_pip"], rtol=1e-5, atol=1e-8)
+
+    # 4. Spot-space spatial factors parity
+    assert np.allclose(res.factors, ref["factors"], rtol=1e-5, atol=1e-8)
+
+    # 5. Factor and noise precision hyperparameters parity
+    assert np.allclose(res.alpha_hat_t, ref["alpha_hat_t"], rtol=1e-5, atol=1e-8)
+    assert np.allclose(res.beta_hat_t, ref["beta_hat_t"], rtol=1e-5, atol=1e-8)
+    assert np.allclose(res.alpha_hat_tau, ref["alpha_hat_tau"], rtol=1e-5, atol=1e-8)
+    assert np.allclose(res.beta_hat_tau, ref["beta_hat_tau"], rtol=1e-5, atol=1e-8)
+
+
+def test_init_modes_preserve_identical_priors_and_elbo_objective():
+    """
+    Verifies that the 'init' strategy only modifies the initial variational state q^(0)(theta).
+
+    Specifically confirms that:
+    1. Generative priors p(theta) are strictly identical: All hyperparameter tensors
+      (log_pi_L, log_pi_F, alpha_t, beta_t, alpha_tau, beta_tau) remain identical
+      between init='prior' and init='random' under both default and custom priors.
+    2. The ELBO objective functional L(q; p) is invariant: When evaluated on an identical
+      variational parameter state q, the C++ ELBO routine yields the exact same scalar value
+      under both modes (confirming that 'init' only changes the starting coordinates q^(0),
+      never the optimisation objective itself).
+    """
+    from wavefactor.priors import Priors
+
+    df, ref = _load_reference_data()
+    gene_cols = [c for c in df.columns if c.startswith("gene_")]
+    expr = df[gene_cols].values
+    coords = df[["x_index", "y_index"]].values
+    data = prepare_spatial_data(X=expr, coords=coords, n_factors=2, n_length_scales=2)
+
+    prior_keys = ["log_pi_L", "log_pi_F", "alpha_t", "beta_t", "alpha_tau", "beta_tau"]
+
+    # Case 1: Default priors (None)
+    p_prior = init_parameters(data.true_Y, data.dimensions, priors=None, rng=np.random.RandomState(123), init="prior")
+    p_random = init_parameters(data.true_Y, data.dimensions, priors=None, rng=np.random.RandomState(456), init="random")
+
+    for k in prior_keys:
+        assert np.array_equal(p_prior[k], p_random[k]), f"Default prior mismatch on {k}"
+
+    # Case 2: Custom specified priors
+    n_res = data.dimensions["n_resolutions"]
+    K = 2
+    G = len(gene_cols)
+    custom_priors = Priors(
+        spatial_prior=np.linspace(0.1, 0.9, n_res),
+        gene_prior=np.full((K, G), 0.2),
+        alpha_t=np.full((n_res, K), 2.5),
+        beta_t=np.full((n_res, K), 1.5),
+        alpha_tau=np.full((n_res, G), 3.0),
+        beta_tau=np.full((n_res, G), 2.0),
+    ).build_priors_dict(data.dimensions)
+
+    p_custom_prior = init_parameters(data.true_Y, data.dimensions, priors=custom_priors, rng=np.random.RandomState(111), init="prior")
+    p_custom_random = init_parameters(data.true_Y, data.dimensions, priors=custom_priors, rng=np.random.RandomState(222), init="random")
+
+    for k in prior_keys:
+        assert np.array_equal(p_custom_prior[k], p_custom_random[k]), f"Custom prior mismatch on {k}"
+
+    # Case 3: Objective function invariance
+    # When evaluated on identical parameter states, C++ CAVI produces identical initial ELBO
+    res_prior = _run_single_cavi_worker(p_prior, max_iter=1, tol=1e-5)
+    p_hybrid = dict(p_prior)
+    for k in prior_keys:
+        p_hybrid[k] = p_random[k].copy()
+    res_hybrid = _run_single_cavi_worker(p_hybrid, max_iter=1, tol=1e-5)
+    assert np.isclose(res_prior["elbo_record"][0], res_hybrid["elbo_record"][0], rtol=1e-12, atol=1e-12), (
+        "C++ ELBO objective differed between prior and random mode prior specifications!"
+    )
+
+
 def test_modern_wavefactor_estimator_parity():
     """
     Validates that the modern WaveFactor estimator class behaves consistently,
     converges monotonically, and yields valid factor and loading matrices on
-    the reference dataset.
+    the reference dataset across both init modes.
     """
     df, ref = _load_reference_data()
     gene_cols = [c for c in df.columns if c.startswith("gene_")]
     expr = df[gene_cols].values
     coords = df[["x_index", "y_index"]].values
 
-    model = WaveFactor(
-        n_factors=int(ref["n_factors"]),
-        n_length_scales=int(ref["n_length_scales"]),
-        max_iter=int(ref["max_iter"]),
-        tol=float(ref["tol"]),
-        n_init=int(ref["n_init"]),
-        n_jobs=1,
-        random_state=int(ref["seed"]),
-        verbose=False,
-    )
-    model.fit(expr, coords)
+    for init_mode in ["prior", "random"]:
+        model = WaveFactor(
+            n_factors=int(ref["n_factors"]),
+            n_length_scales=int(ref["n_length_scales"]),
+            max_iter=int(ref["max_iter"]),
+            tol=float(ref["tol"]),
+            n_init=int(ref["n_init"]),
+            n_jobs=1,
+            random_state=int(ref["seed"]),
+            verbose=False,
+            init=init_mode,
+        )
+        model.fit(expr, coords)
 
-    # 1. Output shapes match reference dimensions
-    assert model.loadings_.shape == ref["loadings"].shape
-    assert model.factors_.shape == ref["factors"].shape
-    assert model.gene_pip_.shape == ref["gene_pip"].shape
+        # 1. Output shapes match reference dimensions
+        assert model.loadings_.shape == ref["loadings"].shape
+        assert model.factors_.shape == ref["factors"].shape
+        assert model.gene_pip_.shape == ref["gene_pip"].shape
 
-    # 2. ELBO is finite and within physical bounds of reference run
-    assert np.isfinite(model.elbo_)
-    assert len(model.elbo_history_) > 0
+        # 2. ELBO is finite and within physical bounds
+        assert np.isfinite(model.elbo_)
+        assert len(model.elbo_history_) > 0
 
-    # 3. Deterministic repeatability check
-    model_repeat = WaveFactor(
-        n_factors=int(ref["n_factors"]),
-        n_length_scales=int(ref["n_length_scales"]),
-        max_iter=int(ref["max_iter"]),
-        tol=float(ref["tol"]),
-        n_init=int(ref["n_init"]),
-        n_jobs=1,
-        random_state=int(ref["seed"]),
-        verbose=False,
-    )
-    model_repeat.fit(expr, coords)
-    assert np.isclose(model.elbo_, model_repeat.elbo_, rtol=1e-5, atol=1e-8), "Repeated fit with same random_state differed!"
-    assert np.allclose(model.loadings_, model_repeat.loadings_, rtol=1e-5, atol=1e-8), "Repeated fit loadings differed!"
-    assert np.allclose(model.factors_, model_repeat.factors_, rtol=1e-5, atol=1e-8), "Repeated fit factors differed!"
+        # 3. Deterministic repeatability check
+        model_repeat = WaveFactor(
+            n_factors=int(ref["n_factors"]),
+            n_length_scales=int(ref["n_length_scales"]),
+            max_iter=int(ref["max_iter"]),
+            tol=float(ref["tol"]),
+            n_init=int(ref["n_init"]),
+            n_jobs=1,
+            random_state=int(ref["seed"]),
+            verbose=False,
+            init=init_mode,
+        )
+        model_repeat.fit(expr, coords)
+        assert np.isclose(model.elbo_, model_repeat.elbo_, rtol=1e-5, atol=1e-8), f"Repeated fit with init={init_mode} differed!"
+        assert np.allclose(model.loadings_, model_repeat.loadings_, rtol=1e-5, atol=1e-8)
+        assert np.allclose(model.factors_, model_repeat.factors_, rtol=1e-5, atol=1e-8)
