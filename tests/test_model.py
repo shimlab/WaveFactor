@@ -5,6 +5,7 @@ Integration tests for WaveFactor estimator and WaveFactorResult.
 from tests.compat import pytest
 import numpy as np
 from wavefactor import WaveFactor, WaveFactorResult
+from wavefactor.engine import init_parameters
 
 
 def test_wavefactor_estimator_fit_transform():
@@ -30,7 +31,7 @@ def test_wavefactor_estimator_fit_transform():
 
     coords = np.column_stack([xx.ravel(), yy.ravel()])
 
-    # Fit WaveFactor
+    # Fit WaveFactor (defaults to init="prior")
     model = WaveFactor(
         n_factors=K,
         n_length_scales=D,
@@ -52,6 +53,7 @@ def test_wavefactor_estimator_fit_transform():
     assert model.loadings_.shape == (K, N_genes)
     assert len(model.elbo_history_) > 0
     assert np.isfinite(model.elbo_)
+    assert model.init == "prior"
 
     # Test result object
     res = model.get_result()
@@ -92,7 +94,33 @@ def test_estimator_get_set_params():
     assert params["n_factors"] == 5
     assert params["n_length_scales"] == 3
     assert params["max_iter"] == 200
+    assert params["init"] == "prior"
 
-    model.set_params(n_factors=8, max_iter=500)
+    model.set_params(n_factors=8, max_iter=500, init="random")
     assert model.n_factors == 8
     assert model.max_iter == 500
+    assert model.init == "random"
+
+
+def test_estimator_invalid_init():
+    """Asserts ValueError is raised on unknown init mode."""
+    with pytest.raises(ValueError, match="Unknown init mode 'invalid'"):
+        init_parameters(
+            Y=[],
+            dimensions={
+                "n_resolutions": 2,
+                "n_factors": 2,
+                "F_shape": (2, 4),
+                "ab_t_shape": (2, 2),
+                "ab_tau_shape": (2, 4),
+                "L_shape": [[[]]],
+            },
+            init="invalid",
+        )
+
+    model = WaveFactor(n_length_scales=1, init="unsupported")
+    coords = np.array([[0, 0], [0, 1], [1, 0], [1, 1]])
+    expr = np.ones((4, 2))
+    with pytest.raises(ValueError, match="Unknown init mode 'unsupported'"):
+        model.fit(expr, coords)
+

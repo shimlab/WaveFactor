@@ -3,7 +3,7 @@ Coordinate Ascent Variational Inference (CAVI) execution engine for WaveFactor.
 Interactions with the C++ Pybind11 backend and multithreaded parallelization.
 """
 
-from typing import Dict, Any, Optional, List, Tuple
+from typing import Dict, Any, Optional, List, Tuple, Union
 import os
 import sys
 import time
@@ -87,15 +87,53 @@ def _get_cpp_backend():
     return None
 
 
+def _perturb_log_prob_logit(
+    log_prob: Union[float, np.ndarray],
+    shape: Tuple[int, ...],
+    rng: Any,
+    logit_sd: float = 0.25,
+    eps: float = 1e-12,
+) -> np.ndarray:
+    """
+    Applies Gaussian perturbation in logit space to log-probabilities,
+    clamping safely within [log(eps), log(1 - eps)] to prevent float64
+    underflow or 0 * log(0) NaN in variational ELBO evaluation.
+    """
+    log_p_clipped = np.clip(np.asarray(log_prob, dtype=np.float64), np.log(eps), np.log(1.0 - eps))
+    logit_p = log_p_clipped - np.log(-np.expm1(log_p_clipped))
+    noise = rng.normal(0.0, logit_sd, size=shape)
+    perturbed_logit = logit_p + noise
+    perturbed_log_p = -np.logaddexp(0.0, -perturbed_logit)
+    return np.clip(perturbed_log_p, np.log(eps), np.log(1.0 - eps))
+
+
 def init_parameters(
     Y: List,
     dimensions: Dict[str, Any],
     priors: Optional[Dict[str, Any]] = None,
     rng: Optional[np.random.RandomState] = None,
+    init: str = "prior",
 ) -> Dict[str, Any]:
     """
     Initializes CAVI variational parameters and model prior hyperparameters.
+
+    Parameters
+    ----------
+    Y : List
+        2D DWT coefficient matrices per feature.
+    dimensions : Dict[str, Any]
+        Dimensional constants and tensor shape specifications.
+    priors : Optional[Dict[str, Any]], default=None
+        Generative prior hyperparameters.
+    rng : Optional[np.random.RandomState], default=None
+        Random number generator.
+    init : str, default="prior"
+        Initialisation mode: "prior" (prior-based variational warmup, default)
+        or "random" (legacy uniform random initialisation).
     """
+    if init not in ("prior", "random"):
+        raise ValueError(f"Unknown init mode '{init}'. Expected 'prior' or 'random'.")
+
     if rng is None:
         rng = np.random.mtrand._rand
 
@@ -107,34 +145,7 @@ def init_parameters(
     ab_tau_shape = dimensions["ab_tau_shape"]
     L_shape = dimensions["L_shape"]
 
-    # Initialise variational parameters matching exact pre-v2.0 RNG draw sequence
-    def _draw_L_shaped(low, high, log_transform=False):
-        vals = []
-        for l in range(n_factors):
-            f_vals = []
-            for i in range(n_resolutions):
-                lvl_vals = []
-                for j in range(len(L_shape[l][i])):
-                    matrix_shape = L_shape[l][i][j].shape
-                    draw = rng.uniform(low, high, size=matrix_shape)
-                    lvl_vals.append(np.log(draw) if log_transform else draw)
-                f_vals.append(lvl_vals)
-            vals.append(f_vals)
-        return vals
-
-    mu_L = _draw_L_shaped(-10.0, 10.0, log_transform=False)
-    sigma_squared_L = _draw_L_shaped(0.01, 10.0, log_transform=False)
-    log_r_L = _draw_L_shaped(0.01, 0.99, log_transform=True)
-
-    mu_F = (rng.rand(*F_shape) * 20.0 - 10.0).astype(np.float64)
-    sigma_squared_F = (rng.rand(*F_shape) * 9.99 + 0.01).astype(np.float64)
-    log_r_F = np.log((rng.rand(*F_shape) * 0.98 + 0.01).astype(np.float64))
-    alpha_hat_t = (rng.rand(*ab_t_shape) * 9.99 + 0.01).astype(np.float64)
-    beta_hat_t = (rng.rand(*ab_t_shape) * 9.99 + 0.01).astype(np.float64)
-    alpha_hat_tau = (rng.rand(*ab_tau_shape) * 9.99 + 0.01).astype(np.float64)
-    beta_hat_tau = (rng.rand(*ab_tau_shape) * 9.99 + 0.01).astype(np.float64)
-
-    # Set prior hyperparameters
+    # Set prior hyperparameters upfront (strictly identical across all init modes)
     default_log_pi_L = np.log(np.full(n_resolutions, 0.5, dtype=np.float64))
     default_log_pi_F = np.log(np.full(F_shape, 0.5, dtype=np.float64))
     default_alpha_t = np.full(ab_t_shape, 1.0, dtype=np.float64)
@@ -156,6 +167,81 @@ def init_parameters(
         beta_t = default_beta_t
         alpha_tau = default_alpha_tau
         beta_tau = default_beta_tau
+
+    if init == "prior":
+        # Prior-based variational warmup: q^(0) is centered on the generative priors p(theta)
+        alpha_hat_t = np.asarray(alpha_t, dtype=np.float64).copy()
+        beta_hat_t = (np.asarray(beta_t, dtype=np.float64) * np.exp(rng.normal(0.0, 0.20, size=ab_t_shape))).astype(np.float64)
+
+        alpha_hat_tau = np.asarray(alpha_tau, dtype=np.float64).copy()
+        beta_hat_tau = (np.asarray(beta_tau, dtype=np.float64) * np.exp(rng.normal(0.0, 0.20, size=ab_tau_shape))).astype(np.float64)
+
+        # Approximation of the expected value of inverse-gamma distribution
+        # This approximation was used instead of the exact form beta/(alpha-1)
+        # because the exact form only applies for alpha > 1, which might not
+        # hold in general, and such approximation was acceptable because
+        # initialisation here requires only a heuristic value reasonably
+        # consistent with the prior-based warm-up idea)
+        var_L_0 = (beta_hat_t / alpha_hat_t).astype(np.float64)
+
+        # Gene loading variational slab (prior slab is N(0, 1))
+        sigma_squared_F = np.ones(F_shape, dtype=np.float64)
+        mu_F = rng.normal(0.0, 1.0, size=F_shape).astype(np.float64)
+        log_r_F = _perturb_log_prob_logit(log_pi_F, F_shape, rng, logit_sd=0.25)
+
+        # Spatial loading variational slab (prior slab is N(0, t_{i,m}^{-1}))
+        mu_L = []
+        sigma_squared_L = []
+        log_r_L = []
+        for l in range(n_factors):
+            f_mu = []
+            f_sig = []
+            f_log_r = []
+            for i in range(n_resolutions):
+                lvl_mu = []
+                lvl_sig = []
+                lvl_log_r = []
+                var_scale = float(var_L_0[i, l])
+                std_scale = float(np.sqrt(var_scale))
+                log_pi_val = float(log_pi_L[i])
+                for j in range(len(L_shape[l][i])):
+                    matrix_shape = L_shape[l][i][j].shape
+                    lvl_mu.append(rng.normal(0.0, std_scale, size=matrix_shape).astype(np.float64))
+                    lvl_sig.append(np.full(matrix_shape, var_scale, dtype=np.float64))
+                    lvl_log_r.append(_perturb_log_prob_logit(log_pi_val, matrix_shape, rng, logit_sd=0.25))
+                f_mu.append(lvl_mu)
+                f_sig.append(lvl_sig)
+                f_log_r.append(lvl_log_r)
+            mu_L.append(f_mu)
+            sigma_squared_L.append(f_sig)
+            log_r_L.append(f_log_r)
+    else:
+        # Initialise variational parameters matching exact pre-v2.0 RNG draw sequence
+        def _draw_L_shaped(low, high, log_transform=False):
+            vals = []
+            for l in range(n_factors):
+                f_vals = []
+                for i in range(n_resolutions):
+                    lvl_vals = []
+                    for j in range(len(L_shape[l][i])):
+                        matrix_shape = L_shape[l][i][j].shape
+                        draw = rng.uniform(low, high, size=matrix_shape)
+                        lvl_vals.append(np.log(draw) if log_transform else draw)
+                    f_vals.append(lvl_vals)
+                vals.append(f_vals)
+            return vals
+
+        mu_L = _draw_L_shaped(-10.0, 10.0, log_transform=False)
+        sigma_squared_L = _draw_L_shaped(0.01, 10.0, log_transform=False)
+        log_r_L = _draw_L_shaped(0.01, 0.99, log_transform=True)
+
+        mu_F = (rng.rand(*F_shape) * 20.0 - 10.0).astype(np.float64)
+        sigma_squared_F = (rng.rand(*F_shape) * 9.99 + 0.01).astype(np.float64)
+        log_r_F = np.log((rng.rand(*F_shape) * 0.98 + 0.01).astype(np.float64))
+        alpha_hat_t = (rng.rand(*ab_t_shape) * 9.99 + 0.01).astype(np.float64)
+        beta_hat_t = (rng.rand(*ab_t_shape) * 9.99 + 0.01).astype(np.float64)
+        alpha_hat_tau = (rng.rand(*ab_tau_shape) * 9.99 + 0.01).astype(np.float64)
+        beta_hat_tau = (rng.rand(*ab_tau_shape) * 9.99 + 0.01).astype(np.float64)
 
     return {
         "n_resolutions": n_resolutions,
@@ -273,6 +359,7 @@ def run_cavi(
     n_jobs: int = -1,
     random_state: Optional[int] = None,
     verbose: bool = True,
+    init: str = "prior",
 ) -> Dict[str, Any]:
     """
     Orchestrates multi-start Coordinate Ascent Variational Inference.
@@ -297,6 +384,9 @@ def run_cavi(
         Seed for deterministic random number generation.
     verbose : bool, default=True
         Whether to print progress messages.
+    init : str, default="prior"
+        Initialisation mode: "prior" (prior-based variational warmup, default)
+        or "random" (legacy uniform random initialisation).
 
     Returns
     -------
@@ -317,7 +407,7 @@ def run_cavi(
 
     # Generate initial parameter states
     params_list = [
-        init_parameters(true_Y, dimensions, priors=priors, rng=np.random.RandomState(s))
+        init_parameters(true_Y, dimensions, priors=priors, rng=np.random.RandomState(s), init=init)
         for s in seeds
     ]
 
