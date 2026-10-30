@@ -82,6 +82,25 @@ def test_wavefactor_estimator_fit_transform():
     assert res.beta_hat_tau.shape == (D + 1, N_genes)
     assert np.all(res.loadings_variance >= 0.0)
 
+    # Test provenance and rich string representations
+    assert model.version_ == res.version
+    assert isinstance(model.version_, str)
+    assert len(model.version_) > 0
+    assert model.fit_info_["version"] == res.version
+    assert model.fit_info_["n_factors"] == K
+    assert model.fit_info_["n_spots"] == N_spots
+    assert model.fit_info_["n_features"] == N_genes
+    assert model.fit_info_["n_init"] == 2
+    assert res.n_spots == N_spots
+    assert res.n_init == 2
+    assert "version=v" in repr(res)
+    assert f"{K} factors" in repr(res)
+    assert "WaveFactor Analysis Result" in res.summary()
+    assert f"Version:             {res.version}" in res.summary()
+    assert "Features:            6" in res.summary()
+    assert "Initialisations:     Best of 2 starts" in res.summary()
+    assert "C++ Engine Runtime" not in res.summary()
+
     # Test RuntimeError on unfitted model
     unfitted = WaveFactor()
     with pytest.raises(RuntimeError):
@@ -118,9 +137,44 @@ def test_estimator_invalid_init():
             init="invalid",
         )
 
-    model = WaveFactor(n_length_scales=1, init="unsupported")
+    model = WaveFactor(n_length_scales=1, init="unsupported", verbose=False)
     coords = np.array([[0, 0], [0, 1], [1, 0], [1, 1]])
     expr = np.ones((4, 2))
     with pytest.raises(ValueError, match="Unknown init mode 'unsupported'"):
         model.fit(expr, coords)
+
+
+def test_version_provenance():
+    """Asserts wavefactor.__version__ resolves correctly from repository root asset."""
+    import wavefactor
+    from pathlib import Path
+
+    version_file = Path(__file__).resolve().parent.parent / "VERSION"
+    assert version_file.is_file()
+    expected_version = version_file.read_text(encoding="utf-8").strip()
+
+    assert wavefactor.__version__ == expected_version
+    assert isinstance(wavefactor.__version__, str)
+    assert len(wavefactor.__version__.split(".")) >= 2
+
+
+def test_console_banner_verbal_emission():
+    """Asserts verbose fit() emits verbal disambiguated banner without pronumerals."""
+    import io
+    from contextlib import redirect_stdout
+    import wavefactor
+
+    coords = np.array([[0, 0], [0, 1], [1, 0], [1, 1]])
+    expr = np.ones((4, 2))
+
+    model = WaveFactor(n_factors=2, n_length_scales=1, max_iter=2, verbose=True)
+
+    buf = io.StringIO()
+    with redirect_stdout(buf):
+        model.fit(expr, coords)
+
+    output = buf.getvalue()
+    assert f"[WaveFactor v{wavefactor.__version__}]" in output
+    assert "Fitting 2 factors (1 detail scales, 2 coefficient resolutions) on 4 spots x 2 features..." in output
+
 

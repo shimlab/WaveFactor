@@ -3,6 +3,7 @@ Scikit-learn compatible Estimator for WaveFactor.
 """
 
 from typing import Optional, Union, Tuple, List, Dict, Any
+import time
 import numpy as np
 
 try:
@@ -29,6 +30,7 @@ except ImportError:
             return self.fit(X, y=y, **fit_params).transform(X)
 
 
+from . import __version__
 from .priors import Priors
 from .data import prepare_spatial_data, WaveFactorData
 from .results import WaveFactorResult
@@ -121,6 +123,8 @@ class WaveFactor(BaseEstimator):
         # Fitted attributes (populated after fit)
         self.result_: Optional[WaveFactorResult] = None
         self.data_: Optional[WaveFactorData] = None
+        self.version_: Optional[str] = None
+        self.fit_info_: Optional[Dict[str, Any]] = None
 
     def fit(
         self,
@@ -144,7 +148,17 @@ class WaveFactor(BaseEstimator):
         self : WaveFactor
             Fitted estimator.
         """
-        # 1. Ingest and preprocess spatial data (strict grid validation and 2D DWT)
+        # 1. Console banner emission (gated by verbose)
+        if self.verbose:
+            n_spots, n_features = X.shape
+            n_res = self.n_length_scales + 1
+            print(
+                f"[WaveFactor v{__version__}] Fitting {self.n_factors} factors "
+                f"({self.n_length_scales} detail scales, {n_res} coefficient resolutions) "
+                f"on {n_spots:,} spots x {n_features:,} features..."
+            )
+
+        # 2. Ingest and preprocess spatial data (strict grid validation and 2D DWT)
         self.data_ = prepare_spatial_data(
             X=X,
             coords=coords,
@@ -152,7 +166,7 @@ class WaveFactor(BaseEstimator):
             n_length_scales=self.n_length_scales,
         )
 
-        # 2. Build prior hyperparameter matrices
+        # 3. Build prior hyperparameter matrices
         priors_obj = Priors(
             spatial_prior=self.spatial_prior,
             gene_prior=self.gene_prior,
@@ -163,7 +177,7 @@ class WaveFactor(BaseEstimator):
         )
         priors_dict = priors_obj.build_priors_dict(self.data_.dimensions)
 
-        # 3. Execute Coordinate Ascent Variational Inference
+        # 4. Execute Coordinate Ascent Variational Inference
         best_cavi_out = run_cavi(
             true_Y=self.data_.true_Y,
             dimensions=self.data_.dimensions,
@@ -177,7 +191,21 @@ class WaveFactor(BaseEstimator):
             init=self.init,
         )
 
-        # 4. Construct rich result object
+        # 5. Construct rich result object and fit provenance
+        self.version_ = __version__
+        self.fit_info_ = {
+            "version": __version__,
+            "timestamp": time.strftime("%Y-%m-%dT%H:%M:%S"),
+            "n_factors": self.n_factors,
+            "n_length_scales": self.n_length_scales,
+            "n_resolutions": self.n_length_scales + 1,
+            "n_spots": int(self.data_.dimensions["n_spots"]),
+            "n_features": int(self.data_.dimensions["n_features"]),
+            "n_init": self.n_init,
+            "elbo": float(best_cavi_out["elbo"]),
+            "cpp_time": float(best_cavi_out.get("cpp_time", 0.0)),
+        }
+
         self.result_ = WaveFactorResult(
             parameters=best_cavi_out["parameters"],
             elbo_record=best_cavi_out["elbo_record"],
@@ -187,6 +215,8 @@ class WaveFactor(BaseEstimator):
             spot_grid_coords=self.data_.spot_grid_coords,
             coords=self.data_.coords,
             cpp_time=best_cavi_out.get("cpp_time", 0.0),
+            version=__version__,
+            fit_info=self.fit_info_,
         )
 
         return self

@@ -36,6 +36,10 @@ class WaveFactorResult:
         Original spot spatial coordinates (N_spots, 2).
     cpp_time : float
         Elapsed C++ CAVI runtime in seconds.
+    version : str
+        WaveFactor software package version used to generate the result.
+    fit_info : Dict[str, Any]
+        Structured runtime execution and model fitting provenance metadata.
     """
 
     def __init__(
@@ -48,6 +52,8 @@ class WaveFactorResult:
         spot_grid_coords: Optional[np.ndarray] = None,
         coords: Optional[np.ndarray] = None,
         cpp_time: float = 0.0,
+        version: str = "",
+        fit_info: Optional[Dict[str, Any]] = None,
     ):
         self.parameters = parameters
         self.elbo_record = np.asarray(elbo_record, dtype=np.float64)
@@ -57,6 +63,8 @@ class WaveFactorResult:
         self.spot_grid_coords = spot_grid_coords
         self.coords = coords
         self.cpp_time = cpp_time
+        self.version = str(version)
+        self.fit_info = fit_info or {}
 
         # Cached computed properties
         self._spatial_factor_maps: Optional[np.ndarray] = None
@@ -84,9 +92,19 @@ class WaveFactorResult:
         return max(len(self.elbo_record) - 1, 0)
 
     @property
+    def n_init(self) -> int:
+        """Number of randomized initial parameter starts evaluated."""
+        return int(self.fit_info.get("n_init", 1))
+
+    @property
     def elbo_history(self) -> np.ndarray:
         """Trace of Evidence Lower Bound values across iterations."""
         return self.elbo_record
+
+    @property
+    def n_spots(self) -> int:
+        """Number of spatial spots (N)."""
+        return self.dimensions["n_spots"]
 
     @property
     def n_factors(self) -> int:
@@ -252,3 +270,29 @@ class WaveFactorResult:
             self._spot_factors = factor_maps[gy, gx, :]
         else:
             self._spot_factors = factor_maps.reshape(-1, K)
+
+    def __repr__(self) -> str:
+        ver_str = f", version=v{self.version}" if self.version else ""
+        return (
+            f"<WaveFactorResult: {self.n_factors} factors, "
+            f"{self.n_spots:,} spots, "
+            f"ELBO={self.elbo:.1f}"
+            f"{ver_str}>"
+        )
+
+    def summary(self) -> str:
+        """Returns a formatted multi-line summary of model fit, dimensions, and provenance."""
+        inits_str = f"Best of {self.n_init} starts" if self.n_init > 1 else "1 start"
+        lines = [
+            "WaveFactor Analysis Result",
+            "=" * 30,
+            f"Version:             {self.version if self.version else 'unspecified'}",
+            f"Spatial Factors:     {self.n_factors}",
+            f"Detail Scales:       {self.n_resolutions - 1} ({self.n_resolutions} total resolutions)",
+            f"Grid Dimensions:     {self.grid_side_length} x {self.grid_side_length} ({self.n_spots:,} spots)",
+            f"Features:            {self.n_features:,}",
+            f"Initialisations:     {inits_str}",
+            f"Iterations:          {self.n_iter}",
+            f"Final ELBO:          {self.elbo:.4f}",
+        ]
+        return "\n".join(lines)
