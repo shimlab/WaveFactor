@@ -4,13 +4,13 @@
 
 ---
 
-## 🚀 Documentation
+## Documentation
 
 Please refer to the [documentation](https://shimlab.github.io/WaveFactor/) for installation, code snippets, examples, etc.
 
 ---
 
-## 🧪 Testing & Quality Assurance
+## Testing & Quality Assurance
 
 Run both the compiled C++ and Python test suite with the command:
 
@@ -25,7 +25,7 @@ Options:
 
 ---
 
-## 📂 Repository Structure
+## Repository Structure
 
 - `docs/`: Documentation files
 - `dev/`: Developer files
@@ -38,13 +38,15 @@ Options:
 
 ---
 
-## Citation
+## Citations, Publications and Presentations
 
-Preprint coming soon, stay tuned!
+**Preprint**: Coming soon, stay tuned!
+
+**Research Poster (2026 November)**: [Click to Download (PDF)](docs/assets/2026Nov-WaveFactor-Poster.pdf)
 
 ---
 
-## Contact
+## Contacts
 
 **Authors**
 

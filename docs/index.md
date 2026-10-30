@@ -7,7 +7,7 @@
 
 ---
 
-## 📚 Contents
+## Contents
 
 - **[Installation Guide](installation.md)**: How to set up an isolated environment and install WaveFactor.
 - **[Data Input & Output](input_output.md)**: Expected input grid formats, preprocessing tips, and model outputs.
@@ -15,13 +15,15 @@
 
 ---
 
-## Citation
+## Citations, Publications and Presentations
 
-Preprint coming soon, stay tuned!
+**Preprint**: Coming soon, stay tuned!
+
+**Research Poster (2026 November)**: [Click to Download (PDF)](docs/assets/2026Nov-WaveFactor-Poster.pdf)
 
 ---
 
-## Contact
+## Contacts
 
 **Authors**
 
@@ -42,4 +44,4 @@ Preprint coming soon, stay tuned!
 
 ---
 
-> 🤖 **LLM Context**: Working with an AI assistant? Use the raw single-file documentation at [llms.md](llms.md).
+> **LLM Context**: Working with an AI assistant? Use the raw single-file documentation at [llms.md](llms.md).
