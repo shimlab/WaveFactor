@@ -35,3 +35,30 @@ Options:
 - `test/`: C++ testing suite
 - `tests/`: Python test suite
 - `wavefactor/`: Python package
+
+---
+
+## Citation
+
+Preprint coming soon, stay tuned!
+
+---
+
+## Contact
+
+**Authors**
+
+- Yulin Wu¹²³
+  - Email: [yulin4@student.unimelb.edu.au](mailto:yulin4@student.unimelb.edu.au)
+  - LinkedIn: [www.linkedin.com/in/yulin-wu-59a0591b0](https://www.linkedin.com/in/yulin-wu-59a0591b0/)
+- Heejung Shim¹²³⁴⁵⁶⁷
+
+**Affiliations**
+
+¹ Melbourne Integrative Genomics, The University of Melbourne  
+² School of Mathematics and Statistics, The University of Melbourne  
+³ ARC Centre of Excellence for the Mathematical Analysis of Cellular Systems, The University of Melbourne  
+⁴ Snow Vision Accelerator, The University of Sydney  
+⁵ Charles Perkins Centre, The University of Sydney  
+⁶ Sydney Precision Data Science Centre, The University of Sydney  
+⁷ School of Mathematics and Statistics, The University of Sydney
