@@ -33,7 +33,7 @@ def simulate_spatial_data(
     side: int = 16,
     n_genes: int = 100,
     n_factors: int = 2,
-    seed: int = 42,
+    seed: int = 999,
 ) -> Tuple[np.ndarray, np.ndarray, List[str], np.ndarray, np.ndarray]:
     """
     Simulates a synthetic spatial transcriptomics dataset with known ground truth.
@@ -46,7 +46,7 @@ def simulate_spatial_data(
         Total number of genes.
     n_factors : int, default=2
         Number of latent spatial factors.
-    seed : int, default=42
+    seed : int, default=999
         Random seed for deterministic generation.
 
     Returns
@@ -105,7 +105,7 @@ def main():
         side=16,
         n_genes=100,
         n_factors=2,
-        seed=42,
+        seed=999,
     )
     print("Simulated Data: 256 spots (16x16 grid), 100 genes, 2 spatial factors\n")
 
@@ -116,8 +116,8 @@ def main():
         n_length_scales=2,
         max_iter=500,
         tol=1e-4,
-        n_init=3,
-        random_state=42,
+        n_init=10,
+        random_state=999,
         verbose=False,
     )
     model.fit(expr, coords)
