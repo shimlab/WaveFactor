@@ -1,9 +1,5 @@
 # Data Input & Output
 
-> **Note**: This documentation is a **work in progress** and subject to further improvements.
-
----
-
 ## 1. What WaveFactor Expects as Input
 
 WaveFactor needs two inputs: an expression matrix `X` and spot coordinates `coords`.

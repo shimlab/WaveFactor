@@ -1,60 +1,47 @@
 # Installation Guide
 
-> **Note**: This documentation is a **work in progress** and subject to further improvements.
+## Standard Installation (Recommended)
 
----
-
-## 1. Requirements
-
-Before installing, make sure you have:
-
-- **Python** $\ge 3.7$
-- **CMake** $\ge 3.16$
-- **A C++17 compiler** (e.g. GCC or Clang)
-
----
-
-## 2. Install in an Isolated Environment
-
-Using an isolated virtual environment prevents conflicts with other Python packages:
+Install WaveFactor with pip:
 
 ```bash
-# 1. Clone this repository (copy URL from the green "Code" button on GitHub)
+pip install wavefactor
+```
+
+Verify your installation:
+
+```bash
+python -c "import wavefactor as wf; print('WaveFactor version:', wf.__version__)"
+```
+
+!!! tip "Ready-to-Use Packages (Pre-Compiled)"
+    Ready-to-use packages are provided for standard modern Python installations (**Python 3.10, 3.11, 3.12, and 3.13**) across common platforms (**Linux**, **Windows**, and **Mac**). 
+
+    If these packages do not work for you, you can also try building from source (see below).
+
+---
+
+## Optional: Building from Source
+
+If a pre-compiled wheel is not available or fails for your environment or you wish to compile locally:
+
+### Prerequisites
+
+These are illustrative reference settings rather than rigid constraints—other configurations may also work, though meeting them does not guarantee successful builds across arbitrary systems:
+
+- **Python** $\ge 3.10$
+- **CMake** $\ge 3.20$
+- **A C++17 compiler** (e.g. GCC, Clang, or MSVC)
+
+### Instructions
+
+Clone the repository and install using `pip`:
+
+```bash
+# 1. Clone this repository
 git clone https://github.com/shimlab/WaveFactor.git
 cd WaveFactor
 
-# 2. Create and activate a virtual environment (this might differ depending on Python setup/operating system, etc.)
-python3 -m venv wavefactor-venv
-source wavefactor-venv/bin/activate
-
-# 3. Install WaveFactor
+# 2. Build and install locally
 pip install .
-```
-
-> **Warning** if installing into multiple environments or reinstalling, we recommend deleting the `build` folder created after every installation before starting a new installation so as to avoid potential conflicts with installation artifacts.
-
----
-
-## 3. (Optional) Check Installation Succeeded
-
-Check that the installation succeeded:
-
-```bash
-pip show wavefactor
-```
-
----
-
-## 4. (Optional) Deactivate or Remove
-
-Deactivate the virtual environment by:
-
-```bash
-deactivate
-```
-
-After deactivation, to completely delete the installation, just remove the `wavefactor-venv/` folder:
-
-```bash
-rm -rf wavefactor-venv
 ```

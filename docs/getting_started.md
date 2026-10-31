@@ -1,7 +1,5 @@
 # Getting Started
 
-> **Note**: This documentation is a **work in progress** and subject to further improvements.
-
 First, follow **[Installation Guide](installation.md)** to install WaveFactor into a virtual environment and activate said environment.
 
 ## Example Code Snippet
