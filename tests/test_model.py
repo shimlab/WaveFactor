@@ -31,7 +31,7 @@ def test_wavefactor_estimator_fit_transform():
 
     coords = np.column_stack([xx.ravel(), yy.ravel()])
 
-    # Fit WaveFactor (defaults to init="prior")
+    # Fit WaveFactor (defaults to init="random")
     model = WaveFactor(
         n_factors=K,
         n_length_scales=D,
@@ -53,7 +53,7 @@ def test_wavefactor_estimator_fit_transform():
     assert model.loadings_.shape == (K, N_genes)
     assert len(model.elbo_history_) > 0
     assert np.isfinite(model.elbo_)
-    assert model.init == "prior"
+    assert model.init == "random"
 
     # Test result object
     res = model.get_result()
@@ -113,12 +113,12 @@ def test_estimator_get_set_params():
     assert params["n_factors"] == 5
     assert params["n_length_scales"] == 3
     assert params["max_iter"] == 200
-    assert params["init"] == "prior"
+    assert params["init"] == "random"
 
-    model.set_params(n_factors=8, max_iter=500, init="random")
+    model.set_params(n_factors=8, max_iter=500, init="prior")
     assert model.n_factors == 8
     assert model.max_iter == 500
-    assert model.init == "random"
+    assert model.init == "prior"
 
 
 def test_estimator_invalid_init():

@@ -78,12 +78,13 @@ class WaveFactor(BaseEstimator):
         Random seed for deterministic initialization and reproducibility.
     verbose : bool, default=True
         Whether to log progress during CAVI optimization.
-    init : str, default="prior"
+    init : str, default="random"
         Variational parameter initialisation strategy. Options:
+        - "random": Uniform pseudo-random initialization on [-10, 10] (default).
+          Provides broad exploration across the non-convex ELBO landscape,
+          promotes factor diversity, and prevents factor redundancy / cloning.
         - "prior": Sample variational states from generative prior expectations
-          with mild jitter to break symmetry. Resolves scale explosion and noise
-          swamping in high-dimensional settings.
-        - "random": Legacy uniform pseudo-random initialization on [-10, 10].
+          with mild jitter. Useful when strong directional priors are specified.
     """
 
     def __init__(
@@ -102,7 +103,7 @@ class WaveFactor(BaseEstimator):
         n_jobs: int = -1,
         random_state: Optional[int] = None,
         verbose: bool = True,
-        init: str = "prior",
+        init: str = "random",
     ):
         self.n_factors = n_factors
         self.n_length_scales = n_length_scales

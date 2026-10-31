@@ -112,7 +112,7 @@ def init_parameters(
     dimensions: Dict[str, Any],
     priors: Optional[Dict[str, Any]] = None,
     rng: Optional[np.random.RandomState] = None,
-    init: str = "prior",
+    init: str = "random",
 ) -> Dict[str, Any]:
     """
     Initializes CAVI variational parameters and model prior hyperparameters.
@@ -127,9 +127,9 @@ def init_parameters(
         Generative prior hyperparameters.
     rng : Optional[np.random.RandomState], default=None
         Random number generator.
-    init : str, default="prior"
-        Initialisation mode: "prior" (prior-based variational warmup, default)
-        or "random" (legacy uniform random initialisation).
+    init : str, default="random"
+        Initialisation mode: "random" (uniform pseudo-random initialisation, default)
+        or "prior" (prior-based variational warmup).
     """
     if init not in ("prior", "random"):
         raise ValueError(f"Unknown init mode '{init}'. Expected 'prior' or 'random'.")
@@ -359,7 +359,7 @@ def run_cavi(
     n_jobs: int = -1,
     random_state: Optional[int] = None,
     verbose: bool = True,
-    init: str = "prior",
+    init: str = "random",
 ) -> Dict[str, Any]:
     """
     Orchestrates multi-start Coordinate Ascent Variational Inference.
@@ -384,9 +384,9 @@ def run_cavi(
         Seed for deterministic random number generation.
     verbose : bool, default=True
         Whether to print progress messages.
-    init : str, default="prior"
-        Initialisation mode: "prior" (prior-based variational warmup, default)
-        or "random" (legacy uniform random initialisation).
+    init : str, default="random"
+        Initialisation mode: "random" (uniform pseudo-random initialisation, default)
+        or "prior" (prior-based variational warmup).
 
     Returns
     -------
