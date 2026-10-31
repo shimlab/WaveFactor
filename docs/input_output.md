@@ -25,7 +25,14 @@ WaveFactor needs two inputs: an expression matrix `X` and spot coordinates `coor
 
 ## 3. What WaveFactor Returns (`result`)
 
-After calling `model.fit(X, coords)`:
+After fitting the model with `model.fit(X, coords)`, access the posterior estimates via `result = model.get_result()`:
+
+```python
+model.fit(X, coords)
+result = model.get_result()
+```
+
+### Key Output Fields in `result`
 
 | Output | Shape | Meaning |
 | :--- | :--- | :--- |
@@ -35,3 +42,8 @@ After calling `model.fit(X, coords)`:
 | `result.gene_pip` | `(K, N_genes)` | Gene inclusion probability ($\approx 1$ = active gene, $\approx 0$ = noise). |
 | `result.spatial_pip` | List of arrays | Wavelet inclusion probabilities across spatial length scales. |
 | `result.elbo` | `float` | Final model fit score (higher is better). |
+
+---
+
+!!! tip "Full API Reference"
+    For full specification of parameters and fields, please visit the [API Reference](api.md).

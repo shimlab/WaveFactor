@@ -29,7 +29,7 @@ model = wf.WaveFactor(
 )
 
 # 3. Apply WaveFactor to the data
-factors = model.fit_transform(X, coords)
+model.fit(X, coords)
 
 # 4. Access posterior estimates
 result = model.get_result()

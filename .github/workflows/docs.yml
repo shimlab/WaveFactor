@@ -6,7 +6,9 @@ on:
       - main
     paths:
       - "docs/**"
+      - "wavefactor/**"
       - "mkdocs.yml"
+      - "pyproject.toml"
       - ".github/workflows/docs.yml"
 
 permissions:
@@ -30,7 +32,7 @@ jobs:
 
       - name: Build site and generate llms.md
         run: |
-          uv run --no-project --with mkdocs-material mkdocs build
+          uv run --extra docs mkdocs build
           for f in $(find docs -name '*.md' | sort); do
             cat "$f"
             echo -e "\n\n---\n"
@@ -49,5 +51,5 @@ jobs:
     needs: build
     steps:
       - name: Deploy to GitHub Pages
-        id: deployment
-        uses: actions/deploy-pages@v4
+      id: deployment
+      uses: actions/deploy-pages@v4

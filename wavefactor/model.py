@@ -62,10 +62,6 @@ class WaveFactor(BaseEstimator):
         Shape hyperparameter matrix for noise precision Gamma prior, shape (R, G).
     beta_tau : Optional[np.ndarray], default=None
         Rate hyperparameter matrix for noise precision Gamma prior, shape (R, G).
-    grid_side_length : int, optional
-        Side length L of the square L x L spatial grid (must be a power of 2,
-        e.g. 16, 32, 64, 128). Total grid cells = L * L. If None, automatically
-        computed as the smallest power of 2 that encloses the spatial coordinates.
     max_iter : int, default=1000
         Maximum CAVI optimization iterations per start.
     tol : float, default=1e-5

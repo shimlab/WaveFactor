@@ -15,11 +15,25 @@ markdown_extensions:
 extra_javascript:
   - https://cdn.jsdelivr.net/npm/mathjax@4/tex-mml-chtml.js
 
+plugins:
+  - search
+  - mkdocstrings:
+      handlers:
+        python:
+          paths: ["."]
+          options:
+            docstring_style: numpy
+            show_source: false
+            show_root_heading: true
+            show_root_toc_entry: true
+            heading_level: 2
+
 nav:
   - Overview: index.md
   - Installation: installation.md
-  - Data Input & Output: input_output.md
   - Getting Started: getting_started.md
+  - Data Input & Output: input_output.md
+  - API Reference: api.md
 
 extra:
   social:
