@@ -8,8 +8,9 @@ from pathlib import Path
 def _load_version() -> str:
     """Loads WaveFactor package version from repository root or package metadata."""
     # 1. Dev mode: read language-neutral VERSION asset directly from repository root
-    repo_version_file = Path(__file__).resolve().parent.parent / "VERSION"
-    if repo_version_file.is_file():
+    repo_root = Path(__file__).resolve().parent.parent
+    repo_version_file = repo_root / "VERSION"
+    if repo_version_file.is_file() and (repo_root / "CMakeLists.txt").is_file():
         return repo_version_file.read_text(encoding="utf-8").strip()
 
     # 2. Installed mode: read from package metadata when distributed as a wheel

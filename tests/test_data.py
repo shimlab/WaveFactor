@@ -2,7 +2,7 @@
 Unit tests for wavefactor.data (spatial data preparation, gridding, and 2D DWT).
 """
 
-from tests.compat import pytest
+import pytest
 import numpy as np
 import pandas as pd
 from wavefactor.data import prepare_spatial_data, is_power_of_4, get_L_shape, get_Y_shape

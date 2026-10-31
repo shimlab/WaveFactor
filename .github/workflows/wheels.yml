@@ -1,0 +1,243 @@
+name: Test, Build Wheels & Publish to PyPI
+
+# Pull requests and manual dispatch run the full test + build pipeline but never publish.
+# Publishing only happens on a push to main that changes VERSION (or a manual dispatch from
+# main with publish=true), and only after ALL test and build jobs below have succeeded.
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "VERSION"
+  pull_request:
+    paths:
+      - "src/**"
+      - "test/**"
+      - "tests/**"
+      - "wavefactor/**"
+      - "lib/**"
+      - "CMakeLists.txt"
+      - "setup.py"
+      - "pyproject.toml"
+      - "MANIFEST.in"
+      - "VERSION"
+      - ".github/workflows/wheels.yml"
+  workflow_dispatch:
+    inputs:
+      publish:
+        description: "Publish built wheels & sdist to PyPI and GitHub Release (main branch only)"
+        required: false
+        default: false
+        type: boolean
+
+permissions:
+  contents: read
+
+concurrency:
+  group: wheels-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  cpp_tests:
+    name: C++ GoogleTests on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-15]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Configure (C++ tests only; Python module is built and tested by the wheel jobs)
+        run: cmake -S . -B build-cpp -DCMAKE_BUILD_TYPE=Release -DBUILD_PYTHON_MODULE=OFF -DBUILD_CPP_TESTS=ON
+        shell: bash
+
+      - name: Build WaveFactorTests
+        run: cmake --build build-cpp --config Release --target WaveFactorTests --parallel
+        shell: bash
+
+      - name: Run GoogleTests via CTest
+        run: ctest --test-dir build-cpp -C Release --output-on-failure --no-tests=error
+        shell: bash
+
+  build_wheels:
+    name: Build & test wheels on ${{ matrix.os }} (${{ matrix.cibw_archs }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          # Linux x86_64 (manylinux_2_28)
+          - os: ubuntu-latest
+            cibw_archs: "x86_64"
+          # Windows AMD64 (MSVC)
+          - os: windows-latest
+            cibw_archs: "AMD64"
+          # macOS Apple Silicon (arm64)
+          - os: macos-15
+            cibw_archs: "arm64"
+          # macOS Intel (x86_64)
+          - os: macos-15-intel
+            cibw_archs: "x86_64"
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      # Python versions are selected in pyproject.toml ([tool.cibuildwheel]).
+      # cibuildwheel runs the Python test suite against every built wheel and fails the job
+      # if any test fails.
+      - name: Build wheels via cibuildwheel
+        uses: pypa/cibuildwheel@v3.4.1
+        env:
+          CIBW_ARCHS: ${{ matrix.cibw_archs }}
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: cibw-wheels-${{ matrix.os }}-${{ matrix.cibw_archs }}
+          path: ./wheelhouse/*.whl
+          if-no-files-found: error
+
+  build_sdist:
+    name: Build source distribution (sdist)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Build sdist
+        run: pipx run build --sdist
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: cibw-sdist
+          path: dist/*.tar.gz
+          if-no-files-found: error
+
+  test_sdist:
+    name: Install & test from sdist
+    needs: [build_sdist]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: cibw-sdist
+          path: dist
+
+      # Builds the extension from the sdist alone (no git checkout), which verifies
+      # that MANIFEST.in ships everything required to compile.
+      - name: Install from sdist
+        run: python -m pip install pytest dist/*.tar.gz
+        shell: bash
+
+      - name: Run Python tests from the unpacked sdist against the installed package
+        run: |
+          set -euo pipefail
+          mkdir sdist_src
+          tar -xzf dist/*.tar.gz -C sdist_src --strip-components=1
+          pytest sdist_src/tests
+        shell: bash
+
+  publish:
+    name: Publish to PyPI & GitHub Release
+    # Every test and build job must succeed before anything is published anywhere.
+    needs: [cpp_tests, build_wheels, build_sdist, test_sdist]
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: write
+    if: >-
+      (github.event_name == 'push' && github.ref == 'refs/heads/main') ||
+      (github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main' && (inputs.publish == true || github.event.inputs.publish == 'true'))
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Download wheel and sdist artifacts
+        uses: actions/download-artifact@v4
+        with:
+          pattern: cibw-*
+          path: dist
+          merge-multiple: true
+
+      - name: Validate version and distribution artifacts
+        run: |
+          set -euo pipefail
+          VERSION=$(tr -d '[:space:]' < VERSION)
+          if [[ ! "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+((a|b|rc)[0-9]+)?(\.post[0-9]+)?(\.dev[0-9]+)?$ ]]; then
+            echo "Invalid VERSION string (expected PEP 440 X.Y.Z[aN|bN|rcN][.postN][.devN]): '$VERSION'" >&2
+            exit 1
+          fi
+          shopt -s nullglob
+          wheels=(dist/*.whl)
+          sdists=(dist/*.tar.gz)
+          echo "Downloaded ${#wheels[@]} wheel(s) and ${#sdists[@]} sdist(s):"
+          ls -lh dist/
+          # 4 platforms x 4 CPython versions (3.10 - 3.13) = 16 wheels
+          if [[ ${#wheels[@]} -ne 16 || ${#sdists[@]} -ne 1 ]]; then
+            echo "Expected 16 wheels and 1 sdist in dist/, got ${#wheels[@]} wheel(s) and ${#sdists[@]} sdist(s)." >&2
+            exit 1
+          fi
+          for w in "${wheels[@]}"; do
+            if [[ "$(basename "$w")" != wavefactor-"$VERSION"-* ]]; then
+              echo "Wheel $w does not match VERSION $VERSION" >&2
+              exit 1
+            fi
+          done
+          if [[ "$(basename "${sdists[0]}")" != "wavefactor-$VERSION.tar.gz" ]]; then
+            echo "sdist ${sdists[0]} does not match VERSION $VERSION" >&2
+            exit 1
+          fi
+          echo "RELEASE_TAG=v$VERSION" >> "$GITHUB_ENV"
+        shell: bash
+
+      # Never attach artifacts built from this commit to a tag that points at different code
+      # (e.g. an already-released version whose VERSION was not bumped).
+      - name: Guard release tag provenance
+        run: |
+          set -euo pipefail
+          if git rev-parse -q --verify "refs/tags/${RELEASE_TAG}" > /dev/null; then
+            TAG_SHA=$(git rev-list -n 1 "refs/tags/${RELEASE_TAG}")
+            if [[ "$TAG_SHA" != "$GITHUB_SHA" ]]; then
+              echo "::error::Tag ${RELEASE_TAG} already exists at ${TAG_SHA}, but this build is from ${GITHUB_SHA}. Bump VERSION to a new version before releasing."
+              exit 1
+            fi
+            echo "Tag ${RELEASE_TAG} already exists at this commit; continuing (re-run)."
+          else
+            echo "Tag ${RELEASE_TAG} does not exist yet; it will be created at ${GITHUB_SHA}."
+          fi
+        shell: bash
+
+      - name: Publish package distributions to PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          packages-dir: dist/
+          # Makes re-runs idempotent if a later step (e.g. the GitHub Release) failed previously
+          skip-existing: true
+
+      - name: Create or update GitHub Release with artifacts
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TARGET_SHA: ${{ github.sha }}
+        run: |
+          set -euo pipefail
+          flags=()
+          if [[ "$RELEASE_TAG" =~ (a|b|rc|dev)[0-9]+$ ]]; then
+            flags+=(--prerelease)
+          fi
+          if gh release view "$RELEASE_TAG" >/dev/null 2>&1; then
+            echo "Release $RELEASE_TAG already exists. Uploading distribution assets..."
+            gh release upload "$RELEASE_TAG" --clobber -- dist/*
+          else
+            echo "Creating GitHub Release $RELEASE_TAG at $TARGET_SHA with distribution assets..."
+            gh release create "$RELEASE_TAG" --target "$TARGET_SHA" --title "$RELEASE_TAG" --generate-notes "${flags[@]}" -- dist/*
+          fi
+        shell: bash
