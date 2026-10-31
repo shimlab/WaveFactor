@@ -26,8 +26,8 @@ python -c "import wavefactor as wf; print('WaveFactor version:', wf.__version__)
 ## Contents
 
 - **[Installation Guide](installation.md)**: Detailed installation options
-- **[Data Input & Output](input_output.md)**: Expected input grid formats, preprocessing tips, and model outputs.
 - **[Getting Started Example](getting_started.md)**: How to run the quick self-contained simulation.
+- **[Data Input & Output](input_output.md)**: Expected input grid formats, preprocessing tips, and model outputs.
 
 ---
 
