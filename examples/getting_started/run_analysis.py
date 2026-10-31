@@ -16,15 +16,8 @@ Ground-Truth Simulation Setup:
       * Genes 081-100: Unassociated background noise (true loading = 0.0)
 """
 
-import os
-import sys
 from typing import Tuple, List
 import numpy as np
-
-# Ensure repository root is on Python path
-REPO_ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-if REPO_ROOT not in sys.path:
-    sys.path.insert(0, REPO_ROOT)
 
 from wavefactor import WaveFactor
 
