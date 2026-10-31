@@ -1,0 +1,26 @@
+include README.md
+include LICENSE
+include VERSION
+include CMakeLists.txt
+include pyproject.toml
+include setup.py
+
+recursive-include src *.hpp *.cpp CMakeLists.txt
+recursive-include lib/eigen *
+recursive-include lib/pybind11 *
+recursive-include lib/googletest *
+recursive-include test *
+recursive-include wavefactor *.py
+recursive-include tests *.py *.csv *.npz
+
+prune lib/eigen/test
+prune lib/eigen/failtest
+prune lib/eigen/bench
+prune lib/eigen/doc
+prune lib/eigen/demos
+prune lib/pybind11/tests
+prune lib/pybind11/docs
+prune lib/googletest/googletest/test
+prune lib/googletest/googlemock/test
+
+global-exclude *.py[cod] __pycache__ *.so *.pyd *.dylib .git* .DS_Store

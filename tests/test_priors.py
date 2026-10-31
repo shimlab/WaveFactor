@@ -2,7 +2,7 @@
 Unit tests for wavefactor.priors.
 """
 
-from tests.compat import pytest
+import pytest
 import numpy as np
 from wavefactor.priors import Priors
 from wavefactor.data import _build_dimensions_dict

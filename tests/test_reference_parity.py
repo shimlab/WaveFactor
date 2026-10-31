@@ -9,7 +9,7 @@ import os
 import numpy as np
 import pandas as pd
 import pywt
-from tests.compat import pytest
+
 
 from wavefactor import WaveFactor, WaveFactorResult
 from wavefactor.data import prepare_spatial_data

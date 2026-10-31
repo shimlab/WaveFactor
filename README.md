@@ -4,6 +4,22 @@
 
 ---
 
+## Quick Install
+
+Install WaveFactor with pip:
+
+```bash
+pip install wavefactor
+```
+
+Verify your installation:
+
+```bash
+python -c "import wavefactor as wf; print('WaveFactor version:', wf.__version__)"
+```
+
+---
+
 ## Documentation
 
 Please refer to the [documentation](https://shimlab.github.io/WaveFactor/) for installation, code snippets, examples, etc.

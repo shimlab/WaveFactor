@@ -7,9 +7,25 @@
 
 ---
 
+## Quick Install
+
+Install WaveFactor with pip:
+
+```bash
+pip install wavefactor
+```
+
+Verify your installation:
+
+```bash
+python -c "import wavefactor as wf; print('WaveFactor version:', wf.__version__)"
+```
+
+---
+
 ## Contents
 
-- **[Installation Guide](installation.md)**: How to set up an isolated environment and install WaveFactor.
+- **[Installation Guide](installation.md)**: Detailed installation options
 - **[Data Input & Output](input_output.md)**: Expected input grid formats, preprocessing tips, and model outputs.
 - **[Getting Started Example](getting_started.md)**: How to run the quick self-contained simulation.
 

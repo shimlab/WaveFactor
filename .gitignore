@@ -48,6 +48,9 @@ out/
 build/
 *.pyd
 *.so
+dist/
+*.egg-info/
+site/
 
 # Not typical practice to include installable libraries; but here kept for sake of ease of reproducibility (hence below commented out)
 

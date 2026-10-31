@@ -1,5 +1,5 @@
 [build-system]
-requires = ["setuptools>=61.0", "wheel", "pybind11>=2.6.0"]
+requires = ["setuptools>=77.0.0", "wheel", "cmake>=3.20"]
 build-backend = "setuptools.build_meta"
 
 [project]
@@ -7,13 +7,17 @@ name = "wavefactor"
 dynamic = ["version"]
 description = "Bayesian Multiresolution Wavelet Spatial Factor Model for Spatial Transcriptomics"
 readme = "README.md"
-requires-python = ">=3.7"
-license = { text = "MIT" }
+requires-python = ">=3.10"
+license = "GPL-3.0-or-later"
+# Bundle the licences of the vendored libraries compiled into the binary wheels
+license-files = [
+    "LICENSE",
+    "lib/pybind11/LICENSE",
+    "lib/eigen/COPYING.MPL2",
+    "lib/eigen/COPYING.BSD",
+]
 classifiers = [
     "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3.7",
-    "Programming Language :: Python :: 3.8",
-    "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
@@ -41,3 +45,16 @@ include = ["wavefactor*"]
 
 [tool.setuptools.dynamic]
 version = {file = "VERSION"}
+
+[tool.cibuildwheel]
+# Build CPython 3.10 - 3.13 binary wheels
+build = ["cp310-*", "cp311-*", "cp312-*", "cp313-*"]
+# Skip 32-bit platforms, PyPy, and musllinux
+skip = ["*-win32", "*-manylinux_i686", "pp*", "*musllinux*"]
+
+# Test every built wheel in an isolated environment before packaging
+test-requires = ["pytest>=7.0.0"]
+test-command = "pytest {project}/tests"
+
+[tool.cibuildwheel.linux]
+manylinux-x86_64-image = "manylinux_2_28"

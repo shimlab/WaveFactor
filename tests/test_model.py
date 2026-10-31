@@ -2,7 +2,7 @@
 Integration tests for WaveFactor estimator and WaveFactorResult.
 """
 
-from tests.compat import pytest
+import pytest
 import numpy as np
 from wavefactor import WaveFactor, WaveFactorResult
 from wavefactor.engine import init_parameters
