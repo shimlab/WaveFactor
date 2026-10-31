@@ -58,7 +58,7 @@ Options:
 
 **Preprint**: Coming soon, stay tuned!
 
-**Research Poster (2026 November)**: [View PDF](docs/assets/2026Nov-WaveFactor-Poster.pdf)
+**Research Poster (2026 November)**: [View PDF](https://github.com/shimlab/WaveFactor/blob/main/docs/assets/2026Nov-WaveFactor-Poster.pdf)
 
 ---
 
