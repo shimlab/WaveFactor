@@ -7,6 +7,7 @@ First, follow **[Installation Guide](installation.md)** to install WaveFactor.
 This example shows how WaveFactor can be applied on data and how posterior estimates can be extracted.
 
 ```python
+import numpy as np
 import wavefactor as wf
 
 # 1. Simulating input data
