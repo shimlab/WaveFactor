@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 Generates llms.md by concatenating documentation pages in mkdocs.yml nav order
-and converting the mkdocstrings-rendered API Reference HTML into clean Markdown.
+and converting the mkdocstrings-rendered API Reference HTML into clean, AI-optimized Markdown.
 """
 
 from html.parser import HTMLParser
@@ -17,43 +17,94 @@ REPO_ROOT = Path(__file__).resolve().parent.parent.parent
 
 
 class MkdocsHTMLToMarkdown(HTMLParser):
-    """Converts the main article HTML from MkDocs/mkdocstrings into clean Markdown."""
+    """Converts the main article HTML from MkDocs/mkdocstrings into clean, AI-friendly Markdown."""
 
     def __init__(self):
         super().__init__()
         self.output = []
         self.in_pre = False
-        self.in_headerlink = False
+        self.in_ignored = False
+        self.ignored_depth = 0
         self.list_depth = 0
-        self.table_row = []
+
+        # Heading state
+        self.in_heading = False
+        self.heading_level = 0
+        self.heading_text = []
+        self.heading_badges = []
+        self.in_badge = False
+        self.badge_depth = 0
+        self.badge_text = []
+
+        # Table state
         self.in_table = False
         self.in_thead = False
-        self.in_th = False
-        self.in_td = False
-        self.cell_content = []
+        self.table_row = []
+        self.in_cell = False
+        self.cell_parts = []
 
     def handle_starttag(self, tag, attrs):
         attr_dict = dict(attrs)
         classes = attr_dict.get("class", "").split()
-        if "headerlink" in classes or "doc-github-link" in classes or "doc-permalink" in classes:
-            self.in_headerlink = True
+
+        # Ignore permalinks, headerlinks, source code links
+        if any(c in classes for c in ["headerlink", "doc-github-link", "doc-permalink"]):
+            self.in_ignored = True
+            self.ignored_depth += 1
+            return
+        if self.in_ignored:
+            self.ignored_depth += 1
             return
 
-        if self.in_th or self.in_td:
-            if tag == "code":
-                self.cell_content.append("`")
-            elif tag in ["strong", "b"]:
-                self.cell_content.append("**")
-            elif tag in ["em", "i"]:
-                self.cell_content.append("*")
+        # Badges (e.g. property, instance-attribute, classmethod)
+        if any(c.startswith("doc-label") for c in classes) or "doc-labels" in classes:
+            self.in_badge = True
+            self.badge_depth += 1
+            return
+        if self.in_badge:
+            self.badge_depth += 1
             return
 
+        # Headings
         if tag in ["h1", "h2", "h3", "h4", "h5", "h6"]:
-            level = int(tag[1])
-            self.output.append("\n\n" + "#" * level + " ")
-        elif tag == "p":
+            self.in_heading = True
+            self.heading_level = int(tag[1])
+            self.heading_text = []
+            self.heading_badges = []
+            return
+
+        if self.in_heading:
+            if tag == "code":
+                self.heading_text.append("`")
+            return
+
+        # Tables
+        if tag == "table":
+            self.in_table = True
             self.output.append("\n\n")
-        elif tag == "pre":
+            return
+        elif tag == "thead":
+            self.in_thead = True
+            return
+        elif tag == "tr":
+            self.table_row = []
+            return
+        elif tag in ["th", "td"]:
+            self.in_cell = True
+            self.cell_parts = []
+            return
+
+        if self.in_cell:
+            if tag == "code":
+                self.cell_parts.append("`")
+            elif tag in ["strong", "b"]:
+                self.cell_parts.append("**")
+            elif tag in ["em", "i"]:
+                self.cell_parts.append("*")
+            return
+
+        # Block & inline elements outside headings/cells
+        if tag == "pre":
             self.in_pre = True
             self.output.append("\n\n```python\n")
         elif tag == "code" and not self.in_pre:
@@ -62,68 +113,93 @@ class MkdocsHTMLToMarkdown(HTMLParser):
             self.output.append("**")
         elif tag in ["em", "i"]:
             self.output.append("*")
+        elif tag == "p":
+            self.output.append("\n\n")
         elif tag == "hr":
             self.output.append("\n\n---\n\n")
         elif tag in ["ul", "ol"]:
             self.list_depth += 1
             self.output.append("\n")
         elif tag == "li":
-            indent = "  " * (self.list_depth - 1)
+            indent = "  " * max(0, self.list_depth - 1)
             self.output.append(f"\n{indent}- ")
-        elif tag == "table":
-            self.in_table = True
-            self.output.append("\n\n")
-        elif tag == "thead":
-            self.in_thead = True
-        elif tag == "tr":
-            self.table_row = []
-        elif tag == "th":
-            self.in_th = True
-            self.cell_content = []
-        elif tag == "td":
-            self.in_td = True
-            self.cell_content = []
 
     def handle_endtag(self, tag):
-        if self.in_headerlink:
-            if tag == "a":
-                self.in_headerlink = False
+        if self.in_ignored:
+            self.ignored_depth -= 1
+            if self.ignored_depth <= 0:
+                self.in_ignored = False
+                self.ignored_depth = 0
             return
 
-        if self.in_th or self.in_td:
-            if tag == "code":
-                self.cell_content.append("`")
-                return
-            elif tag in ["strong", "b"]:
-                self.cell_content.append("**")
-                return
-            elif tag in ["em", "i"]:
-                self.cell_content.append("*")
-                return
+        if self.in_badge:
+            self.badge_depth -= 1
+            if self.badge_depth <= 0:
+                txt = "".join(self.badge_text).strip()
+                if txt:
+                    if self.in_heading:
+                        self.heading_badges.append(txt)
+                    else:
+                        self.output.append(f" *({txt})*")
+                self.in_badge = False
+                self.badge_depth = 0
+                self.badge_text = []
+            return
 
-        if tag in ["h1", "h2", "h3", "h4", "h5", "h6"]:
-            self.output.append("\n")
-        elif tag == "p":
-            self.output.append("\n")
-        elif tag == "pre":
-            self.in_pre = False
-            self.output.append("\n```\n")
-        elif tag == "code" and not self.in_pre:
-            self.output.append("`")
-        elif tag in ["strong", "b"]:
-            self.output.append("**")
-        elif tag in ["em", "i"]:
-            self.output.append("*")
-        elif tag in ["ul", "ol"]:
-            self.list_depth = max(0, self.list_depth - 1)
-            self.output.append("\n")
-        elif tag in ["th", "td"]:
-            text = "".join(self.cell_content).strip().replace("\n", " ")
-            text = re.sub(r"\s+", " ", text)
-            self.table_row.append(text)
-            self.in_th = False
-            self.in_td = False
-        elif tag == "thead":
+        if self.in_heading:
+            if tag in ["h1", "h2", "h3", "h4", "h5", "h6"]:
+                raw = "".join(self.heading_text).strip()
+                # Clean multiple spaces & normalize punctuation
+                raw = re.sub(r"[ \t]+", " ", raw)
+                raw = re.sub(r"`\s+", "`", raw)
+                raw = re.sub(r"\s+`", "`", raw)
+                raw = re.sub(r"`\s*`", " ", raw)
+                # Clean function signature spacing like fit ( X , coords ) -> fit(X, coords)
+                raw = re.sub(r"\(\s+", "(", raw)
+                raw = re.sub(r"\s+\)", ")", raw)
+                raw = re.sub(r"\s*,\s*", ", ", raw)
+                raw = re.sub(r"\s*=\s*", "=", raw)
+                if raw.startswith("`") and not raw.endswith("`"):
+                    raw += "`"
+                elif not raw.startswith("`") and raw.endswith("`"):
+                    raw = "`" + raw
+
+                # Clean instance attribute assignments like elbo=float(elbo) -> elbo
+                if any("attribute" in b for b in self.heading_badges):
+                    m = re.match(r"^`?([a-zA-Z_][a-zA-Z0-9_]*)=.*", raw)
+                    if m:
+                        raw = f"`{m.group(1)}`"
+
+                badges_str = ""
+                if self.heading_badges:
+                    badges_str = " " + " ".join([f"*({b})*" for b in self.heading_badges])
+
+                hashes = "#" * self.heading_level
+                self.output.append(f"\n\n{hashes} {raw}{badges_str}\n\n")
+                self.in_heading = False
+                self.heading_text = []
+                self.heading_badges = []
+            elif tag == "code":
+                self.heading_text.append("`")
+            return
+
+        if self.in_cell:
+            if tag in ["th", "td"]:
+                raw_cell = "".join(self.cell_parts).strip()
+                raw_cell = re.sub(r"\s+", " ", raw_cell)
+                raw_cell = raw_cell.replace("|", "\\|")
+                self.table_row.append(raw_cell)
+                self.in_cell = False
+                self.cell_parts = []
+            elif tag == "code":
+                self.cell_parts.append("`")
+            elif tag in ["strong", "b"]:
+                self.cell_parts.append("**")
+            elif tag in ["em", "i"]:
+                self.cell_parts.append("*")
+            return
+
+        if tag == "thead":
             self.in_thead = False
         elif tag == "tr":
             if self.table_row:
@@ -132,21 +208,40 @@ class MkdocsHTMLToMarkdown(HTMLParser):
                 if self.in_thead:
                     sep = "| " + " | ".join(["---"] * len(self.table_row)) + " |"
                     self.output.append(sep + "\n")
+            self.table_row = []
         elif tag == "table":
             self.in_table = False
+            self.output.append("\n\n")
+        elif tag == "pre":
+            self.in_pre = False
+            self.output.append("\n```\n\n")
+        elif tag == "code" and not self.in_pre:
+            self.output.append("`")
+        elif tag in ["strong", "b"]:
+            self.output.append("**")
+        elif tag in ["em", "i"]:
+            self.output.append("*")
+        elif tag == "p":
+            self.output.append("\n\n")
+        elif tag in ["ul", "ol"]:
+            self.list_depth = max(0, self.list_depth - 1)
             self.output.append("\n")
 
     def handle_data(self, data):
-        if self.in_headerlink:
+        if self.in_ignored:
             return
-        if self.in_th or self.in_td:
-            self.cell_content.append(data)
+        if self.in_badge:
+            self.badge_text.append(data)
+        elif self.in_heading:
+            self.heading_text.append(data)
+        elif self.in_cell:
+            self.cell_parts.append(data)
         else:
             self.output.append(data)
 
 
-def clean_markdown_table_spacing(md: str) -> str:
-    """Removes empty lines between table rows to ensure contiguous GitHub-flavored tables."""
+def clean_markdown_formatting(md: str) -> str:
+    """Cleans up table rows, collapses excess whitespace, and tightens markdown for LLMs."""
     lines = md.splitlines()
     cleaned = []
     in_table = False
@@ -157,14 +252,26 @@ def clean_markdown_table_spacing(md: str) -> str:
             in_table = True
             cleaned.append(stripped)
         elif in_table and stripped == "":
-            continue  # drop blank lines inside markdown table
-        else:
+            continue  # remove blank lines inside markdown tables
+        elif stripped == "":
             in_table = False
-            cleaned.append(line)
+            if cleaned and cleaned[-1] != "":
+                cleaned.append("")
+        else:
+            if in_table:
+                # Blank line after table before following text
+                cleaned.append("")
+            in_table = False
+            cleaned.append(stripped)
 
     result = "\n".join(cleaned)
+    # Ensure blank line before section labels like Returns:, Parameters:, Attributes:
+    result = re.sub(r"([^\n])\n(Parameters:|Returns:|Attributes:)", r"\1\n\n\2", result)
     # Collapse 3+ newlines into 2
-    return re.sub(r"\n{3,}", "\n\n", result).strip()
+    result = re.sub(r"\n{3,}", "\n\n", result)
+    # Clean up empty code spans like ``
+    result = re.sub(r"``", "", result)
+    return result.strip()
 
 
 def extract_api_markdown_from_site(site_dir: Path) -> str:
@@ -187,7 +294,7 @@ def extract_api_markdown_from_site(site_dir: Path) -> str:
     parser = MkdocsHTMLToMarkdown()
     parser.feed(match.group(1))
     raw_md = "".join(parser.output)
-    return clean_markdown_table_spacing(raw_md)
+    return clean_markdown_formatting(raw_md)
 
 
 def get_nav_files(repo_root: Path) -> List[Tuple[str, str]]:
@@ -207,7 +314,7 @@ def get_nav_files(repo_root: Path) -> List[Tuple[str, str]]:
 
 
 def build_llms_md(repo_root: Path):
-    """Builds docs/llms.md following mkdocs.yml nav order using rendered mkdocs output."""
+    """Builds site/llms.md following mkdocs.yml nav order using rendered mkdocs output."""
     docs_dir = repo_root / "docs"
     site_dir = repo_root / "site"
     api_html = site_dir / "api" / "index.html"
