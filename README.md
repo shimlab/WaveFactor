@@ -66,10 +66,12 @@ Options:
 
 **Authors**
 
-- Yulin Wu¹²³
-  - Email: [yulin4@student.unimelb.edu.au](mailto:yulin4@student.unimelb.edu.au)
-  - LinkedIn: [www.linkedin.com/in/yulin-wu-59a0591b0](https://www.linkedin.com/in/yulin-wu-59a0591b0/)
-- Heejung Shim¹²³⁴⁵⁶⁷
+Yulin Wu¹²³
+
+- Email: [yulin4@student.unimelb.edu.au](mailto:yulin4@student.unimelb.edu.au)
+- LinkedIn: [www.linkedin.com/in/yulin-wu-59a0591b0](https://www.linkedin.com/in/yulin-wu-59a0591b0/)
+
+Heejung Shim¹²³⁴⁵⁶⁷
 
 **Affiliations**
 

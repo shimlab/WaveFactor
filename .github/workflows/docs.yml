@@ -19,6 +19,9 @@ on:
       - "mkdocs.yml"
       - "pyproject.toml"
       - ".github/workflows/docs.yml"
+  release:
+    types:
+      - published
 
 permissions:
   contents: read
@@ -55,7 +58,7 @@ jobs:
       url: ${{ steps.deployment.outputs.page_url }}
     runs-on: ubuntu-latest
     needs: build
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    if: (github.event_name == 'push' && github.ref == 'refs/heads/main') || github.event_name == 'release'
     steps:
       - name: Deploy to GitHub Pages
         id: deployment
