@@ -26,7 +26,7 @@ plugins:
             show_source: false
             show_root_heading: true
             show_root_toc_entry: true
-            heading_level: 2
+            heading_level: 3
 
 nav:
   - Overview: index.md
@@ -41,5 +41,5 @@ extra:
       link: https://github.com/shimlab/WaveFactor
       name: GitHub Repository
     - icon: fontawesome/solid/robot
-      link: llms.md
+      link: https://shimlab.github.io/WaveFactor/llms.md
       name: LLM-friendly Documentation (llms.md)

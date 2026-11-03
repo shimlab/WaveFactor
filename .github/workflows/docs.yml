@@ -10,6 +10,15 @@ on:
       - "mkdocs.yml"
       - "pyproject.toml"
       - ".github/workflows/docs.yml"
+  pull_request:
+    branches:
+      - main
+    paths:
+      - "docs/**"
+      - "wavefactor/**"
+      - "mkdocs.yml"
+      - "pyproject.toml"
+      - ".github/workflows/docs.yml"
 
 permissions:
   contents: read
@@ -32,11 +41,8 @@ jobs:
 
       - name: Build site and generate llms.md
         run: |
-          uv run --extra docs mkdocs build
-          for f in $(find docs -name '*.md' | sort); do
-            cat "$f"
-            echo -e "\n\n---\n"
-          done > site/llms.md
+          uv run --extra docs mkdocs build --strict
+          uv run --extra docs python docs/scripts/generate_llms.py
 
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3
@@ -49,6 +55,7 @@ jobs:
       url: ${{ steps.deployment.outputs.page_url }}
     runs-on: ubuntu-latest
     needs: build
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     steps:
       - name: Deploy to GitHub Pages
         id: deployment

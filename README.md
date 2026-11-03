@@ -46,7 +46,7 @@ Options:
 - `docs/`: Documentation files
 - `dev/`: Developer files
 - `examples/`: Example scripts
-- `lib`: External libraries
+- `lib/`: External libraries
 - `src/`: C++ CAVI engine source files
 - `test/`: C++ testing suite
 - `tests/`: Python test suite

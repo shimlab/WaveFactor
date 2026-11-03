@@ -52,4 +52,4 @@ python -c "import wavefactor as wf; print('WaveFactor version:', wf.__version__)
 
 ---
 
-> **LLM Context**: Working with an AI assistant? Use the raw single-file documentation at [llms.md](llms.md).
+> **LLM Context**: Working with an AI assistant? Use the raw single-file documentation at [llms.md](https://shimlab.github.io/WaveFactor/llms.md).

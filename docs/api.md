@@ -32,16 +32,21 @@ This page contains the automated API reference for WaveFactor. Signatures, type 
         - factors
         - spatial_factor_maps
         - loadings
+        - loadings_variance
         - gene_pip
         - spatial_pip
         - precision_t
         - precision_tau
         - elbo
         - elbo_history
-        - cpp_time
-        - dimensions
+        - n_iter
+        - n_init
+        - grid_x
+        - grid_y
         - grid_side_length
         - grid_shape
+        - cpp_time
+        - dimensions
         - summary
 
 ---

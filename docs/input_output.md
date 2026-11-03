@@ -40,7 +40,7 @@ result = model.get_result()
 | `result.spatial_factor_maps` | `(L, L, K)` | Reconstructed 2D spatial maps of each factor. |
 | `result.loadings` | `(K, N_genes)` | How strongly each gene belongs to each factor. |
 | `result.gene_pip` | `(K, N_genes)` | Gene inclusion probability ($\approx 1$ = active gene, $\approx 0$ = noise). |
-| `result.spatial_pip` | List of arrays | Wavelet inclusion probabilities across spatial length scales. |
+| `result.spatial_pip` | Nested list | Wavelet coefficient inclusion probabilities per factor, resolution, and directional subband (`List[List[List[np.ndarray]]]`). |
 | `result.elbo` | `float` | Final model fit score (higher is better). |
 
 ---

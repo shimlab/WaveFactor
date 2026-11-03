@@ -59,9 +59,9 @@ class WaveFactor(BaseEstimator):
     beta_t : Optional[np.ndarray], default=None
         Rate hyperparameter matrix for factor precision Gamma prior, shape (R, K).
     alpha_tau : Optional[np.ndarray], default=None
-        Shape hyperparameter matrix for noise precision Gamma prior, shape (R, G).
+        Shape hyperparameter matrix for noise precision Gamma prior, shape (R, G) where G = n_features.
     beta_tau : Optional[np.ndarray], default=None
-        Rate hyperparameter matrix for noise precision Gamma prior, shape (R, G).
+        Rate hyperparameter matrix for noise precision Gamma prior, shape (R, G) where G = n_features.
     max_iter : int, default=1000
         Maximum CAVI optimization iterations per start.
     tol : float, default=1e-5
