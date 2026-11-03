@@ -59,8 +59,8 @@ def simulate_spatial_data(
     n_spots = side * side
 
     # 1. 2D regular lattice coordinates (row-major: y = row, x = col)
-    x = np.tile(np.arange(side), side)
-    y = np.repeat(np.arange(side), side)
+    gx, gy = np.meshgrid(np.arange(side), np.arange(side))
+    x, y = gx.ravel(), gy.ravel()
     coords = np.column_stack([x, y])
 
     # 2. Ground-truth spatial factor activities (L in R^(N x K))

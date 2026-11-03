@@ -78,12 +78,12 @@ class WaveFactorResult:
 
     @property
     def grid_x(self) -> Optional[np.ndarray]:
-        """1D integer grid x-coordinates (columns in 0..W-1)."""
+        """1D integer grid x-coordinates (columns in 0..L-1)."""
         return self.spot_grid_coords[:, 0] if self.spot_grid_coords is not None else None
 
     @property
     def grid_y(self) -> Optional[np.ndarray]:
-        """1D integer grid y-coordinates (rows in 0..H-1)."""
+        """1D integer grid y-coordinates (rows in 0..L-1)."""
         return self.spot_grid_coords[:, 1] if self.spot_grid_coords is not None else None
 
     @property
@@ -124,7 +124,7 @@ class WaveFactorResult:
     @property
     def spatial_factor_maps(self) -> np.ndarray:
         """
-        2D Continuous Spatial Factor Activity Maps S in R^(N_y x N_x x K),
+        2D Continuous Spatial Factor Activity Maps S in R^(L x L x K),
         reconstructed via automated 2D Inverse Wavelet Transform (IDWT).
         """
         if self._spatial_factor_maps is None:

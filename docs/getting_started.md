@@ -16,7 +16,8 @@ import wavefactor as wf
 #   coords: (N_spots x 2) integer grid coordinates covering [0, L-1] x [0, L-1]
 #   N_spots = L * L must be an exact power of 4 (e.g. 64, 256, 1024, 4096)
 np.random.seed(42)
-coords = np.mgrid[0:32, 0:32].reshape(2, -1).T
+gx, gy = np.meshgrid(np.arange(32), np.arange(32))
+coords = np.column_stack([gx.ravel(), gy.ravel()])
 X = np.random.randn(1024, 200)
 
 # 2. Instantiate WaveFactor estimator
@@ -43,9 +44,9 @@ spatial_pips = result.spatial_pip    # Multiresolution spatial wavelet PIPs
 
 ## Another Example With Simulated Data Based On Gene Program Ground Truths
 
-WaveFactor includes additionally ready-to-run simulation example with ground truth gene programs, fits the model, and checks the results against the ground truth gene programs.
+Additionally, WaveFactor includes a ready-to-run simulation example that simulates data with ground-truth gene programs, fits the model, and verifies the estimated factors and loadings against the ground truth.
 
-This example can be ran with the following command.
+This example can be run with the following command:
 
 ```bash
 python examples/getting_started/run_analysis.py
