@@ -1,8 +1,5 @@
 # WaveFactor Documentation
 
-!!! info "Work in Progress"
-    This documentation is a **work in progress** and subject to further improvements.
-
 **WaveFactor** (formerly `WaviFM`) is a Bayesian factor modeling framework for spatial transcriptomics that explicitly models spatial length scales by performing Coordinate Ascent Variational Inference (CAVI) directly on 2D Discrete Wavelet Transform (DWT) coefficients.
 
 ---
