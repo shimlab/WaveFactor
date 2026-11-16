@@ -24,6 +24,8 @@ python -c "import wavefactor as wf; print('WaveFactor version:', wf.__version__)
 
 **Preprint**: Coming soon, stay tuned!
 
+**Research Presentation (2026 November)**: [View PDF](https://github.com/shimlab/WaveFactor/blob/main/docs/assets/2026Nov-WaveFactor-Presentation.pdf)
+
 **Research Poster (2026 November)**: [View PDF](https://github.com/shimlab/WaveFactor/blob/main/docs/assets/2026Nov-WaveFactor-Poster.pdf)
 
 ---
